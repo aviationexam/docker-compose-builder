@@ -34,7 +34,7 @@ namespace DockerComposeBuilder.Builders
         {
             WorkingObject.DependsOn ??= new List<string>();
 
-            var dependsOnList = WorkingObject.DependsOn as List<string>;
+            var dependsOnList = WorkingObject.DependsOn;
 
             dependsOnList?.AddRange(services);
             return this;
