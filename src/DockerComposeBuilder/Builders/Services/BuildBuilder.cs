@@ -6,7 +6,7 @@ namespace DockerComposeBuilder.Builders.Services;
 
 public class BuildBuilder : BaseBuilder<BuildBuilder, ServiceBuild>
 {
-    private BuildArgumentBuilder? _buildArgumentBuilder = null;
+    private BuildArgumentBuilder? _buildArgumentBuilder;
 
     public BuildBuilder WithContext(string context)
     {

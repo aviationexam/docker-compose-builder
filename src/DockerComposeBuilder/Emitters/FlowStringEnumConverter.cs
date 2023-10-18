@@ -17,9 +17,9 @@ namespace DockerComposeBuilder.Emitters
 
         public override void Emit(ScalarEventInfo eventInfo, IEmitter emitter)
         {
-            if (eventInfo.Source.Type.IsEnum && eventInfo.Source.Value is { } value)
+            if (eventInfo.Source.Type is { IsEnum: true } sourceType && eventInfo.Source.Value is { } value)
             {
-                var enumMember = eventInfo.Source.Type.GetMember(eventInfo.Source.Value.ToString()).FirstOrDefault();
+                var enumMember = sourceType.GetMember(value.ToString()!).FirstOrDefault();
                 var yamlValue = enumMember?.GetCustomAttributes<EnumMemberAttribute>(true).Select(ema => ema.Value).FirstOrDefault() ?? value.ToString();
 
                 eventInfo = new ScalarEventInfo(new ObjectDescriptor(

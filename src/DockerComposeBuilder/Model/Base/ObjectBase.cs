@@ -1,6 +1,7 @@
 using DockerComposeBuilder.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using YamlDotNet.Serialization;
 
 namespace DockerComposeBuilder.Model.Base
@@ -9,7 +10,7 @@ namespace DockerComposeBuilder.Model.Base
     public class ObjectBase : Dictionary<string, object>, IObject
     {
         [YamlIgnore]
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         public T SetProperty<T>(string property, T value)
         {
@@ -23,7 +24,11 @@ namespace DockerComposeBuilder.Model.Base
             return value;
         }
 
-        public bool TryGetProperty<T>(string property, out T result) where T : class
+        public bool TryGetProperty<T>(
+            string property,
+            [NotNullWhen(true)]
+            out T? result
+        ) where T : class
         {
             if (ContainsKey(property))
             {
@@ -35,7 +40,7 @@ namespace DockerComposeBuilder.Model.Base
             return false;
         }
 
-        public T GetProperty<T>(string property) where T : class
+        public T? GetProperty<T>(string property) where T : class
         {
             TryGetProperty<T>(property, out var result);
             return result;

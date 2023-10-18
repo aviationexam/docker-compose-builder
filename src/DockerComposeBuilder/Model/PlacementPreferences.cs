@@ -8,7 +8,7 @@ namespace DockerComposeBuilder.Model
     {
         public string Spread
         {
-            get => GetProperty<string>("spread");
+            get => GetProperty<string>("spread")!;
             set => SetProperty("spread", value);
         }
     }

@@ -18,7 +18,7 @@ namespace DockerComposeBuilder.Emitters
 
             if (value.Value == null)
             {
-                return retVal;
+                return false;
             }
 
             if (value.Value is IEnumerable enumerableObject)
