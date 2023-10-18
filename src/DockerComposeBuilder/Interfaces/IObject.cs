@@ -1,7 +1,6 @@
-namespace DockerComposeBuilder.Interfaces
+namespace DockerComposeBuilder.Interfaces;
+
+public interface IObject
 {
-    public interface IObject
-    {
-        string Name { get; set; }
-    }
+    string Name { get; set; }
 }

@@ -1,22 +1,21 @@
 using DockerComposeBuilder.Model.Services;
 using System;
 
-namespace DockerComposeBuilder.Builders
+namespace DockerComposeBuilder.Builders;
+
+public class SwarmServiceBuilder : ServiceBuilder
 {
-    public class SwarmServiceBuilder : ServiceBuilder
+    public SwarmServiceBuilder WithDeploy(Action<DeployBuilder> builderExpression)
     {
-        public SwarmServiceBuilder WithDeploy(Action<DeployBuilder> builderExpression)
-        {
-            var deployBuilder = new DeployBuilder();
-            builderExpression(deployBuilder);
+        var deployBuilder = new DeployBuilder();
+        builderExpression(deployBuilder);
 
-            return WithDeploy(deployBuilder.Build());
-        }
+        return WithDeploy(deployBuilder.Build());
+    }
 
-        protected SwarmServiceBuilder WithDeploy(Deploy deploy)
-        {
-            WorkingObject.Deploy = deploy;
-            return this;
-        }
+    protected SwarmServiceBuilder WithDeploy(Deploy deploy)
+    {
+        WorkingObject.Deploy = deploy;
+        return this;
     }
 }

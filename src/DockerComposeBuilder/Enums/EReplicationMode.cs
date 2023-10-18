@@ -1,13 +1,12 @@
 using System.Runtime.Serialization;
 
-namespace DockerComposeBuilder.Enums
-{
-    public enum EReplicationMode
-    {
-        [EnumMember(Value = "replicated")]
-        Replicated,
+namespace DockerComposeBuilder.Enums;
 
-        [EnumMember(Value = "global")]
-        Global,
-    }
+public enum EReplicationMode
+{
+    [EnumMember(Value = "replicated")]
+    Replicated,
+
+    [EnumMember(Value = "global")]
+    Global,
 }

@@ -1,10 +1,9 @@
 using DockerComposeBuilder.Model.Base;
 using System;
 
-namespace DockerComposeBuilder.Model
+namespace DockerComposeBuilder.Model;
+
+[Serializable]
+public class Map : ObjectBase
 {
-    [Serializable]
-    public class Map : ObjectBase
-    {
-    }
 }

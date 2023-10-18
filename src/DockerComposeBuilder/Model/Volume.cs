@@ -1,10 +1,9 @@
 using DockerComposeBuilder.Model.Base;
 using System;
 
-namespace DockerComposeBuilder.Model
+namespace DockerComposeBuilder.Model;
+
+[Serializable]
+public class Volume : ObjectBase
 {
-    [Serializable]
-    public class Volume : ObjectBase
-    {
-    }
 }

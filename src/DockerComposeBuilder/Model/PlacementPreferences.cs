@@ -1,15 +1,14 @@
 using DockerComposeBuilder.Model.Base;
 using System;
 
-namespace DockerComposeBuilder.Model
+namespace DockerComposeBuilder.Model;
+
+[Serializable]
+public class PlacementPreferences : ObjectBase
 {
-    [Serializable]
-    public class PlacementPreferences : ObjectBase
+    public string Spread
     {
-        public string Spread
-        {
-            get => GetProperty<string>("spread")!;
-            set => SetProperty("spread", value);
-        }
+        get => GetProperty<string>("spread")!;
+        set => SetProperty("spread", value);
     }
 }

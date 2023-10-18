@@ -1,19 +1,18 @@
 using System.Runtime.Serialization;
 
-namespace DockerComposeBuilder.Enums
+namespace DockerComposeBuilder.Enums;
+
+public enum ERestartMode
 {
-    public enum ERestartMode
-    {
-        [EnumMember(Value = "always")]
-        Always,
+    [EnumMember(Value = "always")]
+    Always,
 
-        [EnumMember(Value = "no")]
-        No,
+    [EnumMember(Value = "no")]
+    No,
 
-        [EnumMember(Value = "on-failure")]
-        OnFailure,
+    [EnumMember(Value = "on-failure")]
+    OnFailure,
 
-        [EnumMember(Value = "unless-stopped")]
-        UnlessStopped
-    }
+    [EnumMember(Value = "unless-stopped")]
+    UnlessStopped
 }

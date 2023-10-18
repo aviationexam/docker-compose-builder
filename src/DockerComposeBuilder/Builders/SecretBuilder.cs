@@ -1,22 +1,21 @@
 using DockerComposeBuilder.Builders.Base;
 using DockerComposeBuilder.Model;
 
-namespace DockerComposeBuilder.Builders
+namespace DockerComposeBuilder.Builders;
+
+public class SecretBuilder : BuilderBase<SecretBuilder, Secret>
 {
-    public class SecretBuilder : BuilderBase<SecretBuilder, Secret>
+    internal SecretBuilder()
     {
-        internal SecretBuilder()
-        {
-        }
+    }
 
-        public SecretBuilder WithFile(string file)
-        {
-            return WithProperty("file", file);
-        }
+    public SecretBuilder WithFile(string file)
+    {
+        return WithProperty("file", file);
+    }
 
-        public SecretBuilder SetExternal(bool isExternal)
-        {
-            return WithProperty("external", isExternal);
-        }
+    public SecretBuilder SetExternal(bool isExternal)
+    {
+        return WithProperty("external", isExternal);
     }
 }

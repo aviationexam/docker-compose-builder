@@ -3,27 +3,26 @@ using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.EventEmitters;
 
-namespace DockerComposeBuilder.Emitters
+namespace DockerComposeBuilder.Emitters;
+
+public class FlowStyleStringSequences : ChainedEventEmitter
 {
-    public class FlowStyleStringSequences : ChainedEventEmitter
+    public FlowStyleStringSequences(
+        IEventEmitter nextEmitter
+    ) : base(nextEmitter)
     {
-        public FlowStyleStringSequences(
-            IEventEmitter nextEmitter
-        ) : base(nextEmitter)
-        {
-        }
+    }
 
-        public override void Emit(SequenceStartEventInfo eventInfo, IEmitter emitter)
+    public override void Emit(SequenceStartEventInfo eventInfo, IEmitter emitter)
+    {
+        if (typeof(string[]) == eventInfo.Source.Type)
         {
-            if (typeof(string[]) == eventInfo.Source.Type)
+            eventInfo = new SequenceStartEventInfo(eventInfo.Source)
             {
-                eventInfo = new SequenceStartEventInfo(eventInfo.Source)
-                {
-                    Style = SequenceStyle.Flow,
-                };
-            }
-
-            nextEmitter.Emit(eventInfo, emitter);
+                Style = SequenceStyle.Flow,
+            };
         }
+
+        nextEmitter.Emit(eventInfo, emitter);
     }
 }
