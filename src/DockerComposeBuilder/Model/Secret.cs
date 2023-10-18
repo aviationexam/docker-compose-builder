@@ -6,5 +6,4 @@ namespace DockerComposeBuilder.Model;
 [Serializable]
 public class Secret : ObjectBase
 {
-
 }

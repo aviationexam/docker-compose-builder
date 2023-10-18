@@ -26,8 +26,7 @@ public class ObjectBase : Dictionary<string, object>, IObject
 
     public bool TryGetProperty<T>(
         string property,
-        [NotNullWhen(true)]
-        out T? result
+        [NotNullWhen(true)] out T? result
     ) where T : class
     {
         if (ContainsKey(property))
