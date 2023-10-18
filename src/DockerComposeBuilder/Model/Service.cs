@@ -18,6 +18,9 @@ namespace DockerComposeBuilder.Model
         [YamlMember(Alias = "image")]
         public string? Image { get; set; }
 
+        [YamlMember(Alias = "privileged")]
+        public bool? Privileged { get; set; }
+
         [YamlMember(Alias = "build")]
         public ServiceBuild? Build { get; set; }
 

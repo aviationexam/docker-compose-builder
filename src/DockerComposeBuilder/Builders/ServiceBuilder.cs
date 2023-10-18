@@ -129,6 +129,12 @@ namespace DockerComposeBuilder.Builders
             return this;
         }
 
+        public ServiceBuilder WithPrivileged(bool? privileged = true)
+        {
+            WorkingObject.Privileged = privileged;
+            return this;
+        }
+
         public ServiceBuilder WithNetworks(params string[] networks)
         {
             if (WorkingObject.Networks == null)

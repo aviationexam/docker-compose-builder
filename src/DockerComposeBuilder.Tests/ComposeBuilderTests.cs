@@ -68,6 +68,7 @@ public class ComposeBuilderTests
             services:
               a-service:
                 image: "aviationexam/a-service"
+                privileged: true
 
             """,
             result
