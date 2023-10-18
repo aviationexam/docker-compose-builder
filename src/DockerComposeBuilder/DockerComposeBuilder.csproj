@@ -11,7 +11,7 @@
     <PackageProjectUrl>https://github.com/aviationexam/docker-compose-builder</PackageProjectUrl>
     <RepositoryUrl>https://github.com/aviationexam/docker-compose-builder</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>11.0</LangVersion>
     <PackageTags>Docker Docker-Compose Builder</PackageTags>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Nullable>annotations</Nullable>
