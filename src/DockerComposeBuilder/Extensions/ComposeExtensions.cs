@@ -7,7 +7,7 @@ namespace DockerComposeBuilder.Extensions
 {
     public static class ComposeExtensions
     {
-        public static string Serialize(this Compose serializable)
+        public static string Serialize(this Compose serializable, string lineEndings = "\n")
         {
             var serializer = new SerializerBuilder()
                 .WithTypeConverter(new YamlValueCollectionConverter())
@@ -16,6 +16,7 @@ namespace DockerComposeBuilder.Extensions
                 .WithEventEmitter(nextEmitter => new FlowStringEnumConverter(nextEmitter))
                 .WithEventEmitter(nextEmitter => new ForceQuotedStringValuesEventEmitter(nextEmitter))
                 .WithEmissionPhaseObjectGraphVisitor(args => new YamlIEnumerableSkipEmptyObjectGraphVisitor(args.InnerVisitor))
+                .WithNewLine(lineEndings)
                 .Build();
 
             return serializer.Serialize(serializable);
