@@ -70,14 +70,14 @@ public class ComposeBuilder : BaseBuilder<ComposeBuilder, Compose>
     /// <returns></returns>
     public ComposeBuilder WithVolumes(params Volume[] volumes)
     {
-        if (WorkingObject.Networks == null)
+        if (WorkingObject.Volumes == null)
         {
             WorkingObject.Volumes = new Dictionary<string, Volume>();
         }
 
         foreach (var volume in volumes)
         {
-            if (WorkingObject.Volumes!.ContainsKey(volume.Name))
+            if (WorkingObject.Volumes.ContainsKey(volume.Name))
             {
                 throw new Exception("Volume name already added to volumes, please pick a unique one!");
             }

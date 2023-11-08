@@ -8,6 +8,9 @@ var dbUser = "root";
 var dbPass = "pass";
 var dbName = "wordpress";
 
+var certificatesVolume = Builder.MakeVolume("certificates")
+    .Build();
+
 var network1 = Builder.MakeNetwork("my-net")
     .SetExternal(true)
     .Build();
@@ -66,6 +69,7 @@ var compose = Builder.MakeCompose()
     .WithServices(mysql, wordpress)
     .WithNetworks(network1, network2)
     .WithSecrets(secret1)
+    .WithVolumes(certificatesVolume)
     .Build();
 
 // serialize our object graph to yaml for writing to a docker-compose file
