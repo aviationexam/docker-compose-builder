@@ -1,4 +1,5 @@
 using DockerComposeBuilder.Enums;
+using DockerComposeBuilder.Interfaces;
 using DockerComposeBuilder.Model.Services;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using YamlDotNet.Serialization;
 namespace DockerComposeBuilder.Model;
 
 [Serializable]
-public class Service
+public class Service : IObject
 {
     [YamlIgnore]
     public string Name { get; set; } = null!;
