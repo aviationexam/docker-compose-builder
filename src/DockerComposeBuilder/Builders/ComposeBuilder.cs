@@ -1,4 +1,5 @@
 using DockerComposeBuilder.Builders.Base;
+using DockerComposeBuilder.Interfaces;
 using DockerComposeBuilder.Model;
 using System;
 using System.Collections.Generic;
@@ -14,100 +15,75 @@ public class ComposeBuilder : BaseBuilder<ComposeBuilder, Compose>
     }
 
     /// <summary>
-    ///     Add services to the Compose object
+    /// Add services to the Compose object
     /// </summary>
     /// <param name="services"></param>
     /// <returns></returns>
-    public ComposeBuilder WithServices(params Service[] services)
-    {
-        if (WorkingObject.Services == null)
-        {
-            WorkingObject.Services = new Dictionary<string, Service>();
-        }
-
-        foreach (var service in services)
-        {
-            if (WorkingObject.Services.ContainsKey(service.Name))
-            {
-                throw new Exception("Service name already added to services, please pick a unique one!");
-            }
-
-            WorkingObject.Services.Add(service.Name, service);
-        }
-
-        return this;
-    }
+    public ComposeBuilder WithServices(params Service[] services) => WithT(
+        () => WorkingObject.Services,
+        x => WorkingObject.Services = x,
+        services
+    );
 
     /// <summary>
-    ///     Add networks to the compose object
+    /// Add networks to the compose object
     /// </summary>
     /// <param name="networks"></param>
     /// <returns></returns>
-    public ComposeBuilder WithNetworks(params Network[] networks)
-    {
-        if (WorkingObject.Networks == null)
-        {
-            WorkingObject.Networks = new Dictionary<string, Network>();
-        }
-
-        foreach (var network in networks)
-        {
-            if (WorkingObject.Networks.ContainsKey(network.Name))
-            {
-                throw new Exception("Network name already added to networks, please pick a unique one!");
-            }
-
-            WorkingObject.Networks.Add(network.Name, network);
-        }
-
-        return this;
-    }
+    public ComposeBuilder WithNetworks(params Network[] networks) => WithT(
+        () => WorkingObject.Networks,
+        x => WorkingObject.Networks = x,
+        networks
+    );
 
     /// <summary>
-    ///     Add volumes to the compose object
+    /// Add volumes to the compose object
     /// </summary>
     /// <param name="volumes"></param>
     /// <returns></returns>
-    public ComposeBuilder WithVolumes(params Volume[] volumes)
-    {
-        if (WorkingObject.Volumes == null)
-        {
-            WorkingObject.Volumes = new Dictionary<string, Volume>();
-        }
-
-        foreach (var volume in volumes)
-        {
-            if (WorkingObject.Volumes.ContainsKey(volume.Name))
-            {
-                throw new Exception("Volume name already added to volumes, please pick a unique one!");
-            }
-
-            WorkingObject.Volumes.Add(volume.Name, volume);
-        }
-
-        return this;
-    }
+    public ComposeBuilder WithVolumes(params Volume[] volumes) => WithT(
+        () => WorkingObject.Volumes,
+        x => WorkingObject.Volumes = x,
+        volumes
+    );
 
     /// <summary>
-    ///     Add secrets to the compose object
+    /// Add secrets to the compose object
     /// </summary>
     /// <param name="secrets"></param>
     /// <returns></returns>
-    public ComposeBuilder WithSecrets(params Secret[] secrets)
+    public ComposeBuilder WithSecrets(params Secret[] secrets) => WithT(
+        () => WorkingObject.Secrets,
+        x => WorkingObject.Secrets = x,
+        secrets
+    );
+
+    /// <summary>
+    /// Add services to the Compose object
+    /// </summary>
+    /// <returns></returns>
+    private ComposeBuilder WithT<T>(
+        Func<IDictionary<string, T>?> getCollection,
+        Action<IDictionary<string, T>> setCollection,
+        params T[] parameters
+    ) where T : IObject
     {
-        if (WorkingObject.Secrets == null)
+        var collection = getCollection();
+
+        if (collection == null)
         {
-            WorkingObject.Secrets = new Dictionary<string, Secret>();
+            collection = new Dictionary<string, T>();
+            setCollection(collection);
         }
 
-        foreach (var secret in secrets)
+        foreach (var parameter in parameters)
         {
-            if (WorkingObject.Secrets.ContainsKey(secret.Name))
+            if (collection.ContainsKey(parameter.Name))
             {
-                throw new Exception("Secret name already added to secrets, please pick a unique one!");
+                throw new Exception($"{typeof(T).Name} name ('{parameter.Name}') already added to the target collection, please pick a unique one!");
             }
 
-            WorkingObject.Secrets.Add(secret.Name, secret);
+            collection.Add(parameter.Name, parameter);
         }
 
         return this;
