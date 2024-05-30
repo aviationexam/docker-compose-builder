@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="PolySharp" Version="1.14.1" PrivateAssets="all" />
-    <PackageReference Include="YamlDotNet" Version="15.1.4" />
+    <PackageReference Include="YamlDotNet" Version="15.1.6" />
   </ItemGroup>
 
   <ItemGroup>
