@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
@@ -12,7 +13,8 @@ public sealed class YamlIEnumerableSkipEmptyObjectGraphVisitor : ChainedObjectGr
     {
     }
 
-    public override bool EnterMapping(IPropertyDescriptor key, IObjectDescriptor value, IEmitter context)
+    public override bool EnterMapping(IPropertyDescriptor key, IObjectDescriptor value, IEmitter context,
+        ObjectSerializer serializer)
     {
         var retVal = false;
 
@@ -23,11 +25,13 @@ public sealed class YamlIEnumerableSkipEmptyObjectGraphVisitor : ChainedObjectGr
 
         if (value.Value is IEnumerable enumerableObject)
         {
+            var enumerator = enumerableObject.GetEnumerator();
+            using var _ = enumerator as IDisposable;
             // We have a collection
-            if (enumerableObject.GetEnumerator().MoveNext()) // Returns true if the collection is not empty.
+            if (enumerator.MoveNext()) // Returns true if the collection is not empty.
             {
                 // Don't skip this item - serialize it as normal.
-                retVal = base.EnterMapping(key, value, context);
+                retVal = base.EnterMapping(key, value, context, serializer);
             }
 
             // Else we have an empty collection and the initialized return value of false is correct.
@@ -35,7 +39,7 @@ public sealed class YamlIEnumerableSkipEmptyObjectGraphVisitor : ChainedObjectGr
         else
         {
             // Not a collection, normal serialization.
-            retVal = base.EnterMapping(key, value, context);
+            retVal = base.EnterMapping(key, value, context, serializer);
         }
 
         return retVal;

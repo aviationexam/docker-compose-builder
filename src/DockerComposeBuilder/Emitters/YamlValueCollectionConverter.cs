@@ -10,9 +10,9 @@ public class YamlValueCollectionConverter : IYamlTypeConverter
 {
     public bool Accepts(Type type) => typeof(IValueCollection).IsAssignableFrom(type);
 
-    public object? ReadYaml(IParser parser, Type type) => throw new NotImplementedException();
+    public object? ReadYaml(IParser parser, Type type, ObjectDeserializer rootDeserializer) => throw new NotImplementedException();
 
-    public void WriteYaml(IEmitter emitter, object? value, Type type)
+    public void WriteYaml(IEmitter emitter, object? value, Type type, ObjectSerializer serializer)
     {
         if (value is IValueCollection valueCollection)
         {
