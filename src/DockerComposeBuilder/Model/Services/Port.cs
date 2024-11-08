@@ -60,7 +60,7 @@ public class Port
     public string? HostIp { get; set; }
 
     /// <summary>
-    /// Specifies the name identifier for this configuration.
+    /// A human-readable name for the port, used to document its purpose or usage within the service.
     /// </summary>
     [YamlMember(Alias = "name")]
     public string? Name { get; set; }
