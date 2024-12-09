@@ -4,13 +4,10 @@ using YamlDotNet.Serialization.EventEmitters;
 
 namespace DockerComposeBuilder.Emitters;
 
-public class QuoteSurroundingEventEmitter : ChainedEventEmitter
+public class QuoteSurroundingEventEmitter(
+    IEventEmitter nextEmitter
+) : ChainedEventEmitter(nextEmitter)
 {
-    public QuoteSurroundingEventEmitter(IEventEmitter nextEmitter)
-        : base(nextEmitter)
-    {
-    }
-
     public override void Emit(ScalarEventInfo eventInfo, IEmitter emitter)
     {
         if (eventInfo.Source.StaticType == typeof(string) || eventInfo.Source.StaticType == typeof(object))

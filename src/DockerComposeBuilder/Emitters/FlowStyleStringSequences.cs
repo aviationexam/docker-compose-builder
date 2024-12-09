@@ -5,14 +5,10 @@ using YamlDotNet.Serialization.EventEmitters;
 
 namespace DockerComposeBuilder.Emitters;
 
-public class FlowStyleStringSequences : ChainedEventEmitter
+public class FlowStyleStringSequences(
+    IEventEmitter nextEmitter
+) : ChainedEventEmitter(nextEmitter)
 {
-    public FlowStyleStringSequences(
-        IEventEmitter nextEmitter
-    ) : base(nextEmitter)
-    {
-    }
-
     public override void Emit(SequenceStartEventInfo eventInfo, IEmitter emitter)
     {
         if (typeof(string[]) == eventInfo.Source.Type)

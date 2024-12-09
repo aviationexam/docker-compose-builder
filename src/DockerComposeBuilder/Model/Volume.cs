@@ -4,6 +4,4 @@ using System;
 namespace DockerComposeBuilder.Model;
 
 [Serializable]
-public class Volume : ObjectBase
-{
-}
+public class Volume : ObjectBase;

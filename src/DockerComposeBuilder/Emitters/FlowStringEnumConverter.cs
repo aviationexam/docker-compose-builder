@@ -7,14 +7,10 @@ using YamlDotNet.Serialization.EventEmitters;
 
 namespace DockerComposeBuilder.Emitters;
 
-public class FlowStringEnumConverter : ChainedEventEmitter
+public class FlowStringEnumConverter(
+    IEventEmitter nextEmitter
+) : ChainedEventEmitter(nextEmitter)
 {
-    public FlowStringEnumConverter(
-        IEventEmitter nextEmitter
-    ) : base(nextEmitter)
-    {
-    }
-
     public override void Emit(ScalarEventInfo eventInfo, IEmitter emitter)
     {
         if (eventInfo.Source.Type is { IsEnum: true } sourceType && eventInfo.Source.Value is { } value)

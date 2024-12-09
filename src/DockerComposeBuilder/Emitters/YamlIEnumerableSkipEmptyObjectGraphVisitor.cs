@@ -6,13 +6,10 @@ using YamlDotNet.Serialization.ObjectGraphVisitors;
 
 namespace DockerComposeBuilder.Emitters;
 
-public sealed class YamlIEnumerableSkipEmptyObjectGraphVisitor : ChainedObjectGraphVisitor
+public sealed class YamlIEnumerableSkipEmptyObjectGraphVisitor(
+    IObjectGraphVisitor<IEmitter> nextVisitor
+) : ChainedObjectGraphVisitor(nextVisitor)
 {
-    public YamlIEnumerableSkipEmptyObjectGraphVisitor(IObjectGraphVisitor<IEmitter> nextVisitor)
-        : base(nextVisitor)
-    {
-    }
-
     public override bool EnterMapping(IPropertyDescriptor key, IObjectDescriptor value, IEmitter context,
         ObjectSerializer serializer)
     {

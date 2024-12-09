@@ -8,7 +8,7 @@ namespace DockerComposeBuilder.Emitters;
 
 public class ForceQuotedStringValuesEventEmitter : ChainedEventEmitter
 {
-    private readonly Stack<EmitterState> _state = new Stack<EmitterState>();
+    private readonly Stack<EmitterState> _state = new();
 
     public ForceQuotedStringValuesEventEmitter(IEventEmitter nextEmitter)
         : base(nextEmitter)

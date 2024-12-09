@@ -4,6 +4,4 @@ using System;
 namespace DockerComposeBuilder.Model;
 
 [Serializable]
-public class Network : ObjectBase
-{
-}
+public class Network : ObjectBase;
