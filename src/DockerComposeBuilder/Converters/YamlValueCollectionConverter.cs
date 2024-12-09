@@ -4,7 +4,7 @@ using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
-namespace DockerComposeBuilder.Emitters;
+namespace DockerComposeBuilder.Converters;
 
 public class YamlValueCollectionConverter : IYamlTypeConverter
 {

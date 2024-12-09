@@ -4,7 +4,7 @@ using YamlDotNet.Serialization;
 namespace DockerComposeBuilder.Model.Services;
 
 /// <summary>
-/// Defines port mappings between the host machine and the container, specifying how ports 
+/// Defines port mappings between the host machine and the container, specifying how ports
 /// on the host are exposed to the container's network.
 /// </summary>
 [Serializable]
@@ -17,7 +17,7 @@ public class Port
     public int? Target { get; set; }
 
     /// <summary>
-    /// Specifies the publicly exposed port. Can be set as a range using the syntax <c>start-end</c>, 
+    /// Specifies the publicly exposed port. Can be set as a range using the syntax <c>start-end</c>,
     /// where an available port within the range is assigned.<br/><br/>
     /// <list type="table">
     /// <item>
@@ -31,7 +31,7 @@ public class Port
     /// </list>
     /// </summary>
     [YamlMember(Alias = "published")]
-    public string? Published { get; set; }
+    public PublishedPort? Published { get; set; }
 
     /// <summary>
     /// Specifies the port protocol, either <c>tcp</c> or <c>udp</c>. Defaults to <c>tcp</c>.

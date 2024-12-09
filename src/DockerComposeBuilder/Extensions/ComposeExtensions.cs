@@ -1,3 +1,4 @@
+using DockerComposeBuilder.Converters;
 using DockerComposeBuilder.Emitters;
 using DockerComposeBuilder.Model;
 using YamlDotNet.Serialization;
@@ -11,6 +12,7 @@ public static class ComposeExtensions
     {
         var serializer = new SerializerBuilder()
             .WithTypeConverter(new YamlValueCollectionConverter())
+            .WithTypeConverter(new PublishedPortConverter())
             .WithNamingConvention(UnderscoredNamingConvention.Instance)
             .WithEventEmitter(nextEmitter => new FlowStyleStringSequences(nextEmitter))
             .WithEventEmitter(nextEmitter => new FlowStringEnumConverter(nextEmitter))
