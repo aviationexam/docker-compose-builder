@@ -1,7 +1,6 @@
 using DockerComposeBuilder.Model.Services;
 using System;
 using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
 namespace DockerComposeBuilder.Converters;
@@ -18,11 +17,11 @@ public class PublishedPortConverter : IYamlTypeConverter
         {
             if (publishedPort is { PortAsInt: { } portAsInt })
             {
-                emitter.Emit(new Scalar(portAsInt.ToString()));
+                serializer(portAsInt, typeof(int));
             }
             else if (publishedPort is { PortAsString: { } portAsString })
             {
-                emitter.Emit(new Scalar(AnchorName.Empty, TagName.Empty, portAsString, ScalarStyle.DoubleQuoted, true, false));
+                serializer(portAsString, typeof(string));
             }
         }
     }

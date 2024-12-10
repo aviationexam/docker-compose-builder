@@ -10,8 +10,12 @@ public sealed class YamlIEnumerableSkipEmptyObjectGraphVisitor(
     IObjectGraphVisitor<IEmitter> nextVisitor
 ) : ChainedObjectGraphVisitor(nextVisitor)
 {
-    public override bool EnterMapping(IPropertyDescriptor key, IObjectDescriptor value, IEmitter context,
-        ObjectSerializer serializer)
+    public override bool EnterMapping(
+        IPropertyDescriptor key,
+        IObjectDescriptor value,
+        IEmitter context,
+        ObjectSerializer serializer
+    )
     {
         var retVal = false;
 

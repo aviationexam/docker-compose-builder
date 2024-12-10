@@ -10,8 +10,9 @@ public class ForceQuotedStringValuesEventEmitter : ChainedEventEmitter
 {
     private readonly Stack<EmitterState> _state = new();
 
-    public ForceQuotedStringValuesEventEmitter(IEventEmitter nextEmitter)
-        : base(nextEmitter)
+    public ForceQuotedStringValuesEventEmitter(
+        IEventEmitter nextEmitter
+    ) : base(nextEmitter)
     {
         _state.Push(new EmitterState(EmitterState.EventType.Root));
     }
@@ -68,16 +69,13 @@ public class ForceQuotedStringValuesEventEmitter : ChainedEventEmitter
         base.Emit(eventInfo, emitter);
     }
 
-    private class EmitterState
+    private sealed class EmitterState(
+        EmitterState.EventType eventType
+    )
     {
-        public EventType Type { get; }
+        public EventType Type { get; } = eventType;
 
         private int _currentIndex;
-
-        public EmitterState(EventType eventType)
-        {
-            Type = eventType;
-        }
 
         public void Move()
         {

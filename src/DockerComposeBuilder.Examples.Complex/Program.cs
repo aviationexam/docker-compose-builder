@@ -48,10 +48,19 @@ var wordpress = Builder.MakeService("wordpress")
     {
         Target = 80,
         Published = "8000",
+        Protocol = "tcp",
     }, new Port
     {
         Target = 81,
         Published = 8001,
+        Protocol = "udp",
+    }, new Port
+    {
+        Target = 82,
+        Published = 8002,
+    }, new Port
+    {
+        Target = 83,
     })
     .WithEnvironment(mb =>
     {
