@@ -22,22 +22,23 @@ jobs:
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v3.1.1
         with:
-          versionSpec: '5.x'
+          versionSpec: '6.0.5'
       - name: Use GitVersion
         id: gitversion # step id used as reference for output values
         uses: gittools/actions/gitversion/execute@v3.1.1
       - run: |
-          echo "NuGetVersionV2: ${{ steps.gitversion.outputs.nuGetVersionV2 }}"
-          echo "NuGetPreReleaseTagV2 (not used): ${{ steps.gitversion.outputs.CommitsSinceVersionSourcePadded }}"
+          echo "MajorMinorPatch: ${{ steps.gitversion.outputs.MajorMinorPatch }}"
+          echo "FullSemVer: ${{ steps.gitversion.outputs.FullSemVer }}"
+          echo "CommitsSinceVersionSource: ${{ steps.gitversion.outputs.CommitsSinceVersionSource }}"
       - name: Restore with .Net
         run: dotnet restore --nologo src
       - name: Build with .Net
-        run: dotnet build --configuration Release --no-restore --nologo "-p:Version=${{ steps.gitversion.outputs.MajorMinorPatch }}" src
+        run: dotnet build --configuration Release --no-restore --nologo "-p:Version=${{ steps.gitversion.outputs.FullSemVer }}" src
       - name: Pack with .Net
-        run: dotnet pack --nologo --no-build --configuration Release --output nuget-packages -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }} src/DockerComposeBuilder/DockerComposeBuilder.csproj
+        run: dotnet pack --nologo --no-build --configuration Release --output nuget-packages -p:PackageVersion=${{ steps.gitversion.outputs.FullSemVer }} src/DockerComposeBuilder/DockerComposeBuilder.csproj
       - uses: actions/upload-artifact@v4
         with:
-          name: Nuget-packages-${{ steps.gitversion.outputs.nuGetVersionV2 }}
+          name: Nuget-packages-${{ steps.gitversion.outputs.FullSemVer }}
           path: nuget-packages
       - name: Configure Github Nuget Feed
         run: dotnet nuget add source --name github --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text https://nuget.pkg.github.com/aviationexam/index.json
