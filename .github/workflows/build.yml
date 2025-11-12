@@ -41,7 +41,7 @@ jobs:
         if: always()
         with:
           name: 'xUnit Test Results'
-          path: 'src/TestResults/*.trx'
+          path: 'TestResults/*.trx'
           reporter: dotnet-trx
 
   code-style:
