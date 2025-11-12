@@ -22,11 +22,14 @@ jobs:
             10.0.x
       - uses: actions/checkout@v5
       - name: Restore
-        run: dotnet restore --nologo src
+        run: dotnet restore --nologo
+        working-directory: src
       - name: Build
-        run: dotnet build --no-restore --nologo --configuration Release src
+        run: dotnet build --no-restore --nologo --configuration Release
+        working-directory: src
       - name: Test
-        run: dotnet test --no-build --configuration Release src
+        run: dotnet test --no-build --configuration Release
+        working-directory: src
 
   code-style:
     runs-on: ubuntu-latest
