@@ -7,6 +7,11 @@ on:
   schedule:
     - cron: "0 8 * * 1" # At 08:00 on Monday
 
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+
 jobs:
   unit-test:
     runs-on: ubuntu-latest
@@ -28,8 +33,16 @@ jobs:
         run: dotnet build --no-restore --nologo --configuration Release
         working-directory: src
       - name: Test
-        run: dotnet test --no-build --configuration Release
+        run: dotnet test --no-build --configuration Release --results-directory ../TestResults --report-trx
         working-directory: src
+
+      - name: 📄 Publish test results
+        uses: dorny/test-reporter@v2.1.1
+        if: always()
+        with:
+          name: 'xUnit Test Results'
+          path: 'src/TestResults/*.trx'
+          reporter: dotnet-trx
 
   code-style:
     runs-on: ubuntu-latest
