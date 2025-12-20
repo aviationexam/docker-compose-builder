@@ -1,0 +1,23 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <!-- Build-time tools -->
+  <ItemGroup>
+    <PackageVersion Include="PolySharp" Version="1.15.0" />
+  </ItemGroup>
+
+  <!-- Test infrastructure -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.1.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
+    <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.1" />
+  </ItemGroup>
+
+  <!-- Framework-independent libraries -->
+  <ItemGroup>
+    <PackageVersion Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
+</Project>
