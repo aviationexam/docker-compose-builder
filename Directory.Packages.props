@@ -22,4 +22,29 @@
   <ItemGroup>
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
+
+  <!-- Transitive dependencies - Framework-independent -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.23.0" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
+    <PackageVersion Include="Microsoft.DiaSymReader" Version="2.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="6.0.2" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.Telemetry" Version="2.0.2" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="2.0.2" />
+    <PackageVersion Include="Microsoft.Testing.Platform" Version="2.0.2" />
+    <PackageVersion Include="Microsoft.Testing.Platform.MSBuild" Version="2.0.2" />
+    <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageVersion Include="xunit.analyzers" Version="1.26.0" />
+    <PackageVersion Include="xunit.v3.assert" Version="3.2.1" />
+    <PackageVersion Include="xunit.v3.common" Version="3.2.1" />
+    <PackageVersion Include="xunit.v3.core.mtp-v2" Version="3.2.1" />
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.1" />
+    <PackageVersion Include="xunit.v3.runner.common" Version="3.2.1" />
+    <PackageVersion Include="xunit.v3.runner.inproc.console" Version="3.2.1" />
+  </ItemGroup>
+
+  <!-- Transitive dependencies - .NETStandard 2.0 only -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageVersion Include="Microsoft.NETCore.Platforms" Version="1.1.0" />
+  </ItemGroup>
 </Project>
