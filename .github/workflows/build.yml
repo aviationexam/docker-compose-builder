@@ -37,7 +37,7 @@ jobs:
         working-directory: src
 
       - name: 📄 Publish test results
-        uses: dorny/test-reporter@v2.3.0
+        uses: dorny/test-reporter@v2.4.0
         if: always()
         with:
           name: 'xUnit Test Results'
