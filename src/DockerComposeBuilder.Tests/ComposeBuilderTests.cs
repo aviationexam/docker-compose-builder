@@ -276,10 +276,47 @@ public class ComposeBuilderTests
         var webService = compose.Services["web"];
         Assert.NotNull(webService.Ports);
         Assert.Equal(2, webService.Ports.Count);
+
         Assert.Equal(80, webService.Ports[0].Target);
+        Assert.NotNull(webService.Ports[0].Published);
+        Assert.Equal(8080, webService.Ports[0].Published!.PortAsInt);
+
         Assert.Equal(443, webService.Ports[1].Target);
-        // Note: Published port deserialization requires PublishedPortConverter update
-        // For now, we verify the Port object structure is correctly parsed
+        Assert.NotNull(webService.Ports[1].Published);
+        Assert.Equal(8443, webService.Ports[1].Published!.PortAsInt);
+    }
+
+    [Fact]
+    public void DeserializeWithPortRangesTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              web:
+                image: nginx:latest
+                ports:
+                  - published: "8000-9000"
+                    protocol: tcp
+                  - target: 443
+                    published: 8443
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var webService = compose.Services["web"];
+        Assert.NotNull(webService.Ports);
+        Assert.Equal(2, webService.Ports.Count);
+
+        Assert.Null(webService.Ports[0].Target);
+        Assert.NotNull(webService.Ports[0].Published);
+        Assert.Equal("8000-9000", webService.Ports[0].Published!.PortAsString);
+        Assert.Equal("tcp", webService.Ports[0].Protocol);
+
+        Assert.Equal(443, webService.Ports[1].Target);
+        Assert.NotNull(webService.Ports[1].Published);
+        Assert.Equal(8443, webService.Ports[1].Published!.PortAsInt);
     }
 
     [Fact]
