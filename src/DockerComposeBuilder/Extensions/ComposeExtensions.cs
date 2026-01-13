@@ -35,6 +35,7 @@ public static class ComposeExtensions
     )
     {
         var builder = new DeserializerBuilder()
+            .WithTypeConverter(new PublishedPortConverter())
             .WithNamingConvention(UnderscoredNamingConvention.Instance);
 
         if (ignoreUnmatchedProperties)
