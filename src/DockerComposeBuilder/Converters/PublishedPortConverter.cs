@@ -15,15 +15,15 @@ public class PublishedPortConverter : IYamlTypeConverter
         {
             var value = scalar.Value;
             parser.MoveNext();
-            
+
             if (int.TryParse(value, out var intValue))
             {
-                return (PublishedPort)intValue;
+                return (PublishedPort) intValue;
             }
-            
-            return (PublishedPort)value;
+
+            return (PublishedPort) value;
         }
-        
+
         parser.MoveNext();
         return null;
     }
