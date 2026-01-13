@@ -17,6 +17,7 @@ public class ComposeBuilderTests
         var result = compose.Serialize();
 
         Assert.Equal(
+            // language=yaml
             """
             version: "3.8"
 
@@ -38,6 +39,7 @@ public class ComposeBuilderTests
         var result = compose.Serialize();
 
         Assert.Equal(
+            // language=yaml
             """
             version: "3.8"
             services:
@@ -63,6 +65,7 @@ public class ComposeBuilderTests
         var result = compose.Serialize();
 
         Assert.Equal(
+            // language=yaml
             """
             version: "3.8"
             services:
@@ -91,6 +94,7 @@ public class ComposeBuilderTests
         var result = compose.Serialize();
 
         Assert.Equal(
+            // language=yaml
             """
             version: "3.8"
             services:
@@ -126,6 +130,7 @@ public class ComposeBuilderTests
         var result = compose.Serialize();
 
         Assert.Equal(
+            // language=yaml
             """
             version: "3.8"
             services:
@@ -147,7 +152,8 @@ public class ComposeBuilderTests
     [Fact]
     public void DeserializeSimpleComposeTest()
     {
-        var yaml = """
+        var yaml = // language=yaml
+            """
             version: "3.8"
             services:
               web:
@@ -163,17 +169,18 @@ public class ComposeBuilderTests
         Assert.Equal("3.8", compose.Version);
         Assert.NotNull(compose.Services);
         Assert.Equal(2, compose.Services.Count);
-        Assert.True(compose.Services.ContainsKey("web"));
-        Assert.True(compose.Services.ContainsKey("db"));
-        Assert.Equal("nginx:latest", compose.Services["web"].Image);
-        Assert.Equal("webserver", compose.Services["web"].Hostname);
-        Assert.Equal("postgres:13", compose.Services["db"].Image);
+        var webService = Assert.Contains("web", compose.Services);
+        var dbService = Assert.Contains("db", compose.Services);
+        Assert.Equal("nginx:latest", webService.Image);
+        Assert.Equal("webserver", webService.Hostname);
+        Assert.Equal("postgres:13", dbService.Image);
     }
 
     [Fact]
     public void DeserializeWithEnvironmentTest()
     {
-        var yaml = """
+        var yaml = // language=yaml
+            """
             version: "3.8"
             services:
               db:
@@ -221,7 +228,8 @@ public class ComposeBuilderTests
     [Fact]
     public void TryDeserializeSuccessTest()
     {
-        var yaml = """
+        var yaml = // language=yaml
+            """
             version: "3.8"
             services:
               app:
@@ -249,7 +257,8 @@ public class ComposeBuilderTests
     [Fact]
     public void DeserializeWithPortsTest()
     {
-        var yaml = """
+        var yaml = // language=yaml
+            """
             version: "3.8"
             services:
               web:
@@ -276,7 +285,8 @@ public class ComposeBuilderTests
     [Fact]
     public void DeserializeWithVolumesTest()
     {
-        var yaml = """
+        var yaml = // language=yaml
+            """
             version: "3.8"
             services:
               app:
