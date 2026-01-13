@@ -1,6 +1,7 @@
 using DockerComposeBuilder.Converters;
 using DockerComposeBuilder.Emitters;
 using DockerComposeBuilder.Model;
+using System;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -11,6 +12,7 @@ public static class ComposeExtensions
     public static string Serialize(this Compose serializable, string lineEndings = "\n")
     {
         var serializer = new SerializerBuilder()
+            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
             .WithTypeConverter(new YamlValueCollectionConverter())
             .WithTypeConverter(new PublishedPortConverter())
             .WithNamingConvention(UnderscoredNamingConvention.Instance)
@@ -22,5 +24,32 @@ public static class ComposeExtensions
             .Build();
 
         return serializer.Serialize(serializable);
+    }
+
+    public static Compose Deserialize(string yaml, bool ignoreUnmatchedProperties = true)
+    {
+        var builder = new DeserializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance);
+
+        if (ignoreUnmatchedProperties)
+            builder.IgnoreUnmatchedProperties();
+
+        var deserializer = builder.Build();
+
+        return deserializer.Deserialize<Compose>(yaml);
+    }
+
+    public static bool TryDeserialize(string yaml, out Compose? result, bool ignoreUnmatchedProperties = true)
+    {
+        try
+        {
+            result = Deserialize(yaml, ignoreUnmatchedProperties);
+            return true;
+        }
+        catch (Exception)
+        {
+            result = null;
+            return false;
+        }
     }
 }
