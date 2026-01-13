@@ -17,6 +17,7 @@ public class ComposeBuilderTests
         var result = compose.Serialize();
 
         Assert.Equal(
+            // language=yaml
             """
             version: "3.8"
 
@@ -38,6 +39,7 @@ public class ComposeBuilderTests
         var result = compose.Serialize();
 
         Assert.Equal(
+            // language=yaml
             """
             version: "3.8"
             services:
@@ -63,6 +65,7 @@ public class ComposeBuilderTests
         var result = compose.Serialize();
 
         Assert.Equal(
+            // language=yaml
             """
             version: "3.8"
             services:
@@ -91,6 +94,7 @@ public class ComposeBuilderTests
         var result = compose.Serialize();
 
         Assert.Equal(
+            // language=yaml
             """
             version: "3.8"
             services:
@@ -126,6 +130,7 @@ public class ComposeBuilderTests
         var result = compose.Serialize();
 
         Assert.Equal(
+            // language=yaml
             """
             version: "3.8"
             services:
@@ -142,5 +147,201 @@ public class ComposeBuilderTests
             """,
             result
         );
+    }
+
+    [Fact]
+    public void DeserializeSimpleComposeTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              web:
+                image: nginx:latest
+                hostname: webserver
+              db:
+                image: postgres:13
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose);
+        Assert.Equal("3.8", compose.Version);
+        Assert.NotNull(compose.Services);
+        Assert.Equal(2, compose.Services.Count);
+        var webService = Assert.Contains("web", compose.Services);
+        var dbService = Assert.Contains("db", compose.Services);
+        Assert.Equal("nginx:latest", webService.Image);
+        Assert.Equal("webserver", webService.Hostname);
+        Assert.Equal("postgres:13", dbService.Image);
+    }
+
+    [Fact]
+    public void DeserializeWithEnvironmentTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              db:
+                image: mysql:5.7
+                environment:
+                  MYSQL_ROOT_PASSWORD: secret
+                  MYSQL_DATABASE: mydb
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var dbService = compose.Services["db"];
+        Assert.NotNull(dbService.Environment);
+        Assert.Equal("secret", dbService.Environment["MYSQL_ROOT_PASSWORD"]);
+        Assert.Equal("mydb", dbService.Environment["MYSQL_DATABASE"]);
+    }
+
+    [Fact]
+    public void RoundTripSerializationTest()
+    {
+        // Create a compose using the builder
+        var compose = Builder.MakeCompose()
+            .WithServices(
+                Builder.MakeService("web")
+                    .WithImage("nginx:latest")
+                    .WithHostname("webserver")
+                    .Build()
+            )
+            .Build();
+
+        // Serialize to YAML
+        var yaml1 = compose.Serialize();
+
+        // Deserialize back to object
+        var compose2 = ComposeExtensions.Deserialize(yaml1);
+
+        // Serialize again
+        var yaml2 = compose2.Serialize();
+
+        // The two YAML strings should be identical
+        Assert.Equal(yaml1, yaml2);
+    }
+
+    [Fact]
+    public void TryDeserializeSuccessTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+            """;
+
+        var success = ComposeExtensions.TryDeserialize(yaml, out var compose);
+
+        Assert.True(success);
+        Assert.NotNull(compose);
+        Assert.Equal("3.8", compose.Version);
+    }
+
+    [Fact]
+    public void TryDeserializeFailureTest()
+    {
+        var invalidYaml = "not: [valid: yaml: structure";
+
+        var success = ComposeExtensions.TryDeserialize(invalidYaml, out var compose);
+
+        Assert.False(success);
+        Assert.Null(compose);
+    }
+
+    [Fact]
+    public void DeserializeWithPortsTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              web:
+                image: nginx:latest
+                ports:
+                  - target: 80
+                    published: 8080
+                  - target: 443
+                    published: 8443
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var webService = compose.Services["web"];
+        Assert.NotNull(webService.Ports);
+        Assert.Equal(2, webService.Ports.Count);
+
+        Assert.Equal(80, webService.Ports[0].Target);
+        Assert.NotNull(webService.Ports[0].Published);
+        Assert.Equal(8080, webService.Ports[0].Published!.PortAsInt);
+
+        Assert.Equal(443, webService.Ports[1].Target);
+        Assert.NotNull(webService.Ports[1].Published);
+        Assert.Equal(8443, webService.Ports[1].Published!.PortAsInt);
+    }
+
+    [Fact]
+    public void DeserializeWithPortRangesTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              web:
+                image: nginx:latest
+                ports:
+                  - published: "8000-9000"
+                    protocol: tcp
+                  - target: 443
+                    published: 8443
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var webService = compose.Services["web"];
+        Assert.NotNull(webService.Ports);
+        Assert.Equal(2, webService.Ports.Count);
+
+        Assert.Null(webService.Ports[0].Target);
+        Assert.NotNull(webService.Ports[0].Published);
+        Assert.Equal("8000-9000", webService.Ports[0].Published!.PortAsString);
+        Assert.Equal("tcp", webService.Ports[0].Protocol);
+
+        Assert.Equal(443, webService.Ports[1].Target);
+        Assert.NotNull(webService.Ports[1].Published);
+        Assert.Equal(8443, webService.Ports[1].Published!.PortAsInt);
+    }
+
+    [Fact]
+    public void DeserializeWithVolumesTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                volumes:
+                  - ./data:/app/data
+                  - cache:/app/cache
+            volumes:
+              cache:
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Volumes);
+        Assert.Equal(2, appService.Volumes.Count);
+        Assert.Equal("./data:/app/data", appService.Volumes[0]);
+        Assert.Equal("cache:/app/cache", appService.Volumes[1]);
     }
 }
