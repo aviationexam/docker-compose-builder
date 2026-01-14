@@ -219,11 +219,13 @@ public class ServiceBuilder : BaseBuilder<ServiceBuilder, Service>
 
     public ServiceBuilder WithVolumes(params string[] volumes)
     {
-        WorkingObject.Volumes ??= new List<ServiceVolume>();
+        WorkingObject.Volumes ??= new List<string>();
+        WorkingObject.TypedVolumes ??= new List<ServiceVolume>();
 
+        WorkingObject.Volumes.AddRange(volumes);
         foreach (var volume in volumes)
         {
-            WorkingObject.Volumes.Add(volume);
+            WorkingObject.TypedVolumes.Add(volume);
         }
 
         return this;
@@ -231,9 +233,15 @@ public class ServiceBuilder : BaseBuilder<ServiceBuilder, Service>
 
     public ServiceBuilder WithVolumes(params ServiceVolume[] volumes)
     {
-        WorkingObject.Volumes ??= new List<ServiceVolume>();
+        WorkingObject.Volumes ??= new List<string>();
+        WorkingObject.TypedVolumes ??= new List<ServiceVolume>();
 
-        WorkingObject.Volumes.AddRange(volumes);
+        WorkingObject.TypedVolumes.AddRange(volumes);
+        foreach (var volume in volumes)
+        {
+            WorkingObject.Volumes.Add(volume);
+        }
+
         return this;
     }
 

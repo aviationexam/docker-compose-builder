@@ -34,9 +34,23 @@ public class ServiceVolume
         ShortSyntax = shortSyntax,
     };
 
+    public static implicit operator string(ServiceVolume volume) =>
+        volume.ShortSyntax ?? BuildShortSyntax(volume);
+
     public static ServiceVolume FromShortSyntax(string shortSyntax)
     {
         return new ServiceVolume { ShortSyntax = shortSyntax };
+    }
+
+    private static string BuildShortSyntax(ServiceVolume volume)
+    {
+        var result = $"{volume.Source}:{volume.Target}";
+        if (volume.ReadOnly == true)
+        {
+            result += ":ro";
+        }
+
+        return result;
     }
 }
 

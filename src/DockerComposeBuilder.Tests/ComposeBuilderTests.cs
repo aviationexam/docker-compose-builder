@@ -340,10 +340,12 @@ public class ComposeBuilderTests
 
         Assert.NotNull(compose.Services);
         var appService = compose.Services["app"];
-        Assert.NotNull(appService.Volumes);
-        Assert.Equal(2, appService.Volumes.Count);
-        Assert.Equal("./data:/app/data", appService.Volumes[0].ShortSyntax);
-        Assert.Equal("cache:/app/cache", appService.Volumes[1].ShortSyntax);
+
+        // TypedVolumes is populated during deserialization
+        Assert.NotNull(appService.TypedVolumes);
+        Assert.Equal(2, appService.TypedVolumes.Count);
+        Assert.Equal("./data:/app/data", appService.TypedVolumes[0]);
+        Assert.Equal("cache:/app/cache", appService.TypedVolumes[1]);
     }
 
     [Fact]
@@ -371,17 +373,17 @@ public class ComposeBuilderTests
 
         Assert.NotNull(compose.Services);
         var appService = compose.Services["app"];
-        Assert.NotNull(appService.Volumes);
-        Assert.Equal(2, appService.Volumes.Count);
+        Assert.NotNull(appService.TypedVolumes);
+        Assert.Equal(2, appService.TypedVolumes.Count);
 
-        Assert.Equal("bind", appService.Volumes[0].Type);
-        Assert.Equal("./data", appService.Volumes[0].Source);
-        Assert.Equal("/app/data", appService.Volumes[0].Target);
-        Assert.Equal(true, appService.Volumes[0].ReadOnly);
+        Assert.Equal("bind", appService.TypedVolumes[0].Type);
+        Assert.Equal("./data", appService.TypedVolumes[0].Source);
+        Assert.Equal("/app/data", appService.TypedVolumes[0].Target);
+        Assert.Equal(true, appService.TypedVolumes[0].ReadOnly);
 
-        Assert.Equal("volume", appService.Volumes[1].Type);
-        Assert.Equal("cache", appService.Volumes[1].Source);
-        Assert.Equal("/app/cache", appService.Volumes[1].Target);
+        Assert.Equal("volume", appService.TypedVolumes[1].Type);
+        Assert.Equal("cache", appService.TypedVolumes[1].Source);
+        Assert.Equal("/app/cache", appService.TypedVolumes[1].Target);
     }
 
     [Fact]
