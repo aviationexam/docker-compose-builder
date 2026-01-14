@@ -15,6 +15,7 @@ public static class ComposeExtensions
         .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
         .WithTypeConverter(new YamlValueCollectionConverter())
         .WithTypeConverter(new PublishedPortConverter())
+        .WithTypeConverter(new ServiceVolumeConverter())
         .WithNamingConvention(UnderscoredNamingConvention.Instance)
         .WithEventEmitter(nextEmitter => new FlowStyleStringSequences(nextEmitter))
         .WithEventEmitter(nextEmitter => new FlowStringEnumConverter(nextEmitter))
@@ -36,6 +37,7 @@ public static class ComposeExtensions
     {
         var builder = new DeserializerBuilder()
             .WithTypeConverter(new PublishedPortConverter())
+            .WithTypeConverter(new ServiceVolumeConverter())
             .WithNamingConvention(UnderscoredNamingConvention.Instance);
 
         if (ignoreUnmatchedProperties)

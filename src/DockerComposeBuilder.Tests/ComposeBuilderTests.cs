@@ -1,5 +1,6 @@
 using DockerComposeBuilder.Builders;
 using DockerComposeBuilder.Extensions;
+using DockerComposeBuilder.Model.Services;
 using DockerComposeBuilder.Model.Services.BuildArguments;
 using System.Collections.Generic;
 using Xunit;
@@ -320,7 +321,7 @@ public class ComposeBuilderTests
     }
 
     [Fact]
-    public void DeserializeWithVolumesTest()
+    public void DeserializeWithVolumesShortSyntaxTest()
     {
         var yaml = // language=yaml
             """
@@ -341,7 +342,124 @@ public class ComposeBuilderTests
         var appService = compose.Services["app"];
         Assert.NotNull(appService.Volumes);
         Assert.Equal(2, appService.Volumes.Count);
-        Assert.Equal("./data:/app/data", appService.Volumes[0]);
-        Assert.Equal("cache:/app/cache", appService.Volumes[1]);
+        Assert.Equal("./data:/app/data", appService.Volumes[0].ShortSyntax);
+        Assert.Equal("cache:/app/cache", appService.Volumes[1].ShortSyntax);
+    }
+
+    [Fact]
+    public void DeserializeWithVolumesLongSyntaxTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                volumes:
+                  - type: bind
+                    source: ./data
+                    target: /app/data
+                    read_only: true
+                  - type: volume
+                    source: cache
+                    target: /app/cache
+            volumes:
+              cache:
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Volumes);
+        Assert.Equal(2, appService.Volumes.Count);
+
+        Assert.Equal("bind", appService.Volumes[0].Type);
+        Assert.Equal("./data", appService.Volumes[0].Source);
+        Assert.Equal("/app/data", appService.Volumes[0].Target);
+        Assert.Equal(true, appService.Volumes[0].ReadOnly);
+
+        Assert.Equal("volume", appService.Volumes[1].Type);
+        Assert.Equal("cache", appService.Volumes[1].Source);
+        Assert.Equal("/app/cache", appService.Volumes[1].Target);
+    }
+
+    [Fact]
+    public void SerializeWithVolumesShortSyntaxTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(
+                Builder.MakeService("app")
+                    .WithImage("myapp:latest")
+                    .WithVolumes("./data:/app/data", "cache:/app/cache")
+                    .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                volumes:
+                - "./data:/app/data"
+                - "cache:/app/cache"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void SerializeWithVolumesLongSyntaxTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(
+                Builder.MakeService("app")
+                    .WithImage("myapp:latest")
+                    .WithVolumes(
+                        new ServiceVolume
+                        {
+                            Type = "bind",
+                            Source = "./data",
+                            Target = "/app/data",
+                            ReadOnly = true
+                        },
+                        new ServiceVolume
+                        {
+                            Type = "volume",
+                            Source = "cache",
+                            Target = "/app/cache"
+                        }
+                    )
+                    .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                volumes:
+                - type: "bind"
+                  source: "./data"
+                  target: "/app/data"
+                  read_only: true
+                - type: "volume"
+                  source: "cache"
+                  target: "/app/cache"
+
+            """,
+            result
+        );
     }
 }
