@@ -219,12 +219,19 @@ public class ServiceBuilder : BaseBuilder<ServiceBuilder, Service>
 
     public ServiceBuilder WithVolumes(params string[] volumes)
     {
-        if (WorkingObject.Volumes == null)
-        {
-            WorkingObject.Volumes = new List<string>();
-        }
+        WorkingObject.Volumes ??= new ServiceVolumeCollection();
 
         WorkingObject.Volumes.AddRange(volumes);
+
+        return this;
+    }
+
+    public ServiceBuilder WithVolumes(params ServiceVolume[] volumes)
+    {
+        WorkingObject.Volumes ??= new ServiceVolumeCollection();
+
+        WorkingObject.Volumes.AddRange(volumes);
+
         return this;
     }
 
