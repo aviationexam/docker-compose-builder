@@ -33,7 +33,7 @@ public class ServiceVolumeCollection : IList<ServiceVolume>, IList<string>
 
     public bool Contains(ServiceVolume item) => _items.Contains(item);
 
-    bool ICollection<string>.Contains(string item) => _items.Any(v => (string)v == item);
+    bool ICollection<string>.Contains(string item) => _items.Any(v => (string) v == item);
 
     public void CopyTo(ServiceVolume[] array, int arrayIndex) => _items.CopyTo(array, arrayIndex);
 
@@ -47,7 +47,7 @@ public class ServiceVolumeCollection : IList<ServiceVolume>, IList<string>
 
     public int IndexOf(ServiceVolume item) => _items.IndexOf(item);
 
-    int IList<string>.IndexOf(string item) => _items.FindIndex(v => (string)v == item);
+    int IList<string>.IndexOf(string item) => _items.FindIndex(v => (string) v == item);
 
     public void Insert(int index, ServiceVolume item) => _items.Insert(index, item);
 
@@ -57,7 +57,7 @@ public class ServiceVolumeCollection : IList<ServiceVolume>, IList<string>
 
     bool ICollection<string>.Remove(string item)
     {
-        var index = _items.FindIndex(v => (string)v == item);
+        var index = _items.FindIndex(v => (string) v == item);
         if (index >= 0)
         {
             _items.RemoveAt(index);
@@ -70,7 +70,7 @@ public class ServiceVolumeCollection : IList<ServiceVolume>, IList<string>
 
     public IEnumerator<ServiceVolume> GetEnumerator() => _items.GetEnumerator();
 
-    IEnumerator<string> IEnumerable<string>.GetEnumerator() => _items.Select(v => (string)v).GetEnumerator();
+    IEnumerator<string> IEnumerable<string>.GetEnumerator() => _items.Select(v => (string) v).GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
 
