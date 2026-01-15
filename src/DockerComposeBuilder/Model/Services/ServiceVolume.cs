@@ -30,18 +30,20 @@ public class ServiceVolume
     [YamlIgnore]
     public string? ShortSyntax { get; private set; }
 
-    public static implicit operator ServiceVolume(string shortSyntax) => new()
+    public static implicit operator ServiceVolume(
+        string shortSyntax
+    ) => new()
     {
         ShortSyntax = shortSyntax,
     };
 
-    public static implicit operator string(ServiceVolume volume) =>
-        volume.ShortSyntax ?? BuildShortSyntax(volume);
+    public static implicit operator string(
+        ServiceVolume volume
+    ) => volume.ShortSyntax ?? BuildShortSyntax(volume);
 
-    public static ServiceVolume FromShortSyntax(string shortSyntax)
-    {
-        return new ServiceVolume { ShortSyntax = shortSyntax };
-    }
+    public static ServiceVolume FromShortSyntax(
+        string shortSyntax
+    ) => new() { ShortSyntax = shortSyntax };
 
     private static string BuildShortSyntax(ServiceVolume volume)
     {
@@ -53,34 +55,4 @@ public class ServiceVolume
 
         return result;
     }
-}
-
-[Serializable]
-public class ServiceVolumeBind
-{
-    [YamlMember(Alias = "propagation")]
-    public string? Propagation { get; set; }
-
-    [YamlMember(Alias = "create_host_path")]
-    public bool? CreateHostPath { get; set; }
-
-    [YamlMember(Alias = "selinux")]
-    public string? Selinux { get; set; }
-}
-
-[Serializable]
-public class ServiceVolumeVolume
-{
-    [YamlMember(Alias = "nocopy")]
-    public bool? Nocopy { get; set; }
-}
-
-[Serializable]
-public class ServiceVolumeTmpfs
-{
-    [YamlMember(Alias = "size")]
-    public long? Size { get; set; }
-
-    [YamlMember(Alias = "mode")]
-    public int? Mode { get; set; }
 }

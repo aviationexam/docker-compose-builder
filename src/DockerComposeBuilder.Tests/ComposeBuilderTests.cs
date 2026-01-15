@@ -383,11 +383,12 @@ public class ComposeBuilderTests
         Assert.Equal("bind", appService.Volumes[0].Type);
         Assert.Equal("./data", appService.Volumes[0].Source);
         Assert.Equal("/app/data", appService.Volumes[0].Target);
-        Assert.Equal(true, appService.Volumes[0].ReadOnly);
+        Assert.True(appService.Volumes[0].ReadOnly);
 
         Assert.Equal("volume", appService.Volumes[1].Type);
         Assert.Equal("cache", appService.Volumes[1].Source);
         Assert.Equal("/app/cache", appService.Volumes[1].Target);
+        Assert.Null(appService.Volumes[1].ReadOnly);
     }
 
     [Fact]
