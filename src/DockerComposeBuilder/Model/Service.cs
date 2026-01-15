@@ -41,7 +41,7 @@ public class Service : IObject
     public IDictionary<string, string?>? Environment { get; set; }
 
     [YamlMember(Alias = "volumes")]
-    public List<string>? Volumes { get; set; }
+    public ServiceVolumeCollection? Volumes { get; set; }
 
     [YamlMember(Alias = "ports")]
     public List<Port>? Ports { get; set; }

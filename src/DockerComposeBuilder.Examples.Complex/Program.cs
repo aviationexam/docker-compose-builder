@@ -26,6 +26,7 @@ var mysql = Builder.MakeService("db")
     .WithImage("mysql:5.7")
     .WithNetworks(network1)
     .WithExposed("3306")
+    .WithVolumes("mysql-data:/var/lib/mysql")
     .WithEnvironment(mb =>
     {
         mb.Add("MYSQL_ROOT_PASSWORD", dbPass);
@@ -62,6 +63,21 @@ var wordpress = Builder.MakeService("wordpress")
     {
         Target = 83,
     })
+    .WithVolumes(
+        new ServiceVolume
+        {
+            Type = "bind",
+            Source = "./wp-content",
+            Target = "/var/www/html/wp-content"
+        },
+        new ServiceVolume
+        {
+            Type = "volume",
+            Source = "wp-uploads",
+            Target = "/var/www/html/wp-content/uploads",
+            ReadOnly = false
+        }
+    )
     .WithEnvironment(mb =>
     {
         mb.Add("WORDPRESS_DB_HOST", $"{mysql.Name}:3306");
