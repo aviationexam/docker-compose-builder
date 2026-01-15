@@ -21,50 +21,7 @@ public class ServiceVolumeConverter : IYamlTypeConverter
 
         if (parser.Current is MappingStart)
         {
-            parser.MoveNext();
-
-            var volume = new ServiceVolume();
-
-            while (parser.Current is not MappingEnd)
-            {
-                var propertyName = ((Scalar) parser.Current!).Value;
-                parser.MoveNext();
-
-                switch (propertyName)
-                {
-                    case "type":
-                        volume.Type = ((Scalar) parser.Current!).Value;
-                        parser.MoveNext();
-                        break;
-                    case "source":
-                        volume.Source = ((Scalar) parser.Current!).Value;
-                        parser.MoveNext();
-                        break;
-                    case "target":
-                        volume.Target = ((Scalar) parser.Current!).Value;
-                        parser.MoveNext();
-                        break;
-                    case "read_only":
-                        volume.ReadOnly = bool.Parse(((Scalar) parser.Current!).Value);
-                        parser.MoveNext();
-                        break;
-                    case "bind":
-                        volume.Bind = (ServiceVolumeBind?) rootDeserializer(typeof(ServiceVolumeBind));
-                        break;
-                    case "volume":
-                        volume.Volume = (ServiceVolumeVolume?) rootDeserializer(typeof(ServiceVolumeVolume));
-                        break;
-                    case "tmpfs":
-                        volume.Tmpfs = (ServiceVolumeTmpfs?) rootDeserializer(typeof(ServiceVolumeTmpfs));
-                        break;
-                    default:
-                        parser.MoveNext();
-                        break;
-                }
-            }
-
-            parser.MoveNext();
-            return volume;
+            return rootDeserializer(typeof(ServiceVolume));
         }
 
         parser.MoveNext();
