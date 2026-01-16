@@ -1,7 +1,7 @@
 using DockerComposeBuilder.Model.Infrastructure;
 using System;
+using System.Collections.Generic;
 using YamlDotNet.Core;
-using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 
 namespace DockerComposeBuilder.Converters;
@@ -16,21 +16,23 @@ public class YamlValueCollectionConverter : IYamlTypeConverter
     {
         if (value is IValueCollection valueCollection)
         {
-            emitter.Emit(new SequenceStart(AnchorName.Empty, TagName.Empty, false, SequenceStyle.Block));
-
+            var items = new List<string>();
             foreach (var item in valueCollection)
             {
-                if (item is IKeyValue keyValue)
+                var stringValue = item switch
                 {
-                    emitter.Emit(new Scalar(AnchorName.Empty, TagName.Empty, $"{keyValue.Key}={keyValue.Value}", ScalarStyle.DoubleQuoted, true, false));
-                }
-                else if (item is IKey key)
+                    IKeyValue keyValue => $"{keyValue.Key}={keyValue.Value}",
+                    IKey key => key.Key,
+                    _ => null,
+                };
+
+                if (stringValue != null)
                 {
-                    emitter.Emit(new Scalar(AnchorName.Empty, TagName.Empty, key.Key, ScalarStyle.DoubleQuoted, true, false));
+                    items.Add(stringValue);
                 }
             }
 
-            emitter.Emit(new SequenceEnd());
+            serializer(items, typeof(List<string>));
         }
     }
 }
