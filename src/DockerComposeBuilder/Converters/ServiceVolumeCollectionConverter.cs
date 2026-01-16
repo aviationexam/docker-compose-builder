@@ -1,5 +1,7 @@
 using DockerComposeBuilder.Model.Services;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
@@ -8,8 +10,6 @@ namespace DockerComposeBuilder.Converters;
 
 public class ServiceVolumeCollectionConverter : IYamlTypeConverter
 {
-    private readonly ServiceVolumeConverter _itemConverter = new();
-
     public bool Accepts(Type type) => typeof(ServiceVolumeCollection).IsAssignableFrom(type);
 
     public object? ReadYaml(IParser parser, Type type, ObjectDeserializer rootDeserializer)
@@ -24,10 +24,23 @@ public class ServiceVolumeCollectionConverter : IYamlTypeConverter
 
         while (parser.Current is not SequenceEnd)
         {
-            var item = _itemConverter.ReadYaml(parser, typeof(ServiceVolume), rootDeserializer);
-            if (item is ServiceVolume volume)
+            if (parser.Current is Scalar scalar)
             {
-                collection.Add(volume);
+                var value = scalar.Value;
+                parser.MoveNext();
+                collection.Add(ServiceVolume.FromShortSyntax(value));
+            }
+            else if (parser.Current is MappingStart)
+            {
+                var item = rootDeserializer(typeof(ServiceVolume));
+                if (item is ServiceVolume volume)
+                {
+                    collection.Add(volume);
+                }
+            }
+            else
+            {
+                parser.MoveNext();
             }
         }
 
@@ -42,13 +55,10 @@ public class ServiceVolumeCollectionConverter : IYamlTypeConverter
             return;
         }
 
-        emitter.Emit(new SequenceStart(AnchorName.Empty, TagName.Empty, false, SequenceStyle.Block));
+        var items = collection.Select<ServiceVolume, object>(item =>
+            item.ShortSyntax != null ? item.ShortSyntax : item
+        ).ToList();
 
-        foreach (var item in collection)
-        {
-            _itemConverter.WriteYaml(emitter, item, typeof(ServiceVolume), serializer);
-        }
-
-        emitter.Emit(new SequenceEnd());
+        serializer(items, typeof(List<object>));
     }
 }

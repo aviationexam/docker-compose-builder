@@ -1,5 +1,6 @@
 using DockerComposeBuilder.Builders;
 using DockerComposeBuilder.Extensions;
+using DockerComposeBuilder.Model;
 using DockerComposeBuilder.Model.Services;
 using DockerComposeBuilder.Model.Services.BuildArguments;
 using System.Collections.Generic;
@@ -490,6 +491,151 @@ public class ComposeBuilderTests
                 - type: "volume"
                   source: "cache"
                   target: "/app/cache"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void SerializeJaegerServiceTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(
+                Builder.MakeService("jaeger")
+                    .WithImage("jaegertracing/jaeger:2.14.1")
+                    .WithHealthCheck(healthCheck =>
+                    {
+                        healthCheck.TestCommand =
+                        [
+                            "CMD-SHELL",
+                            "wget --no-verbose --tries=1 -q -O - http://localhost:14269/status | grep -q '\"healthy\":true' > /dev/null || exit 1"
+                        ];
+                        healthCheck.Interval = "1m";
+                        healthCheck.Timeout = "10s";
+                        healthCheck.Retries = 3;
+                        healthCheck.StartPeriod = "15s";
+                    })
+                    .WithHostname("jaeger")
+                    .WithNetworks("app_network")
+                    .WithLabels(labels =>
+                    {
+                        labels.Add("app.service", "jaeger");
+                        labels.Add("app.metrics.port", "14269");
+                        labels.Add("app.container.group", "services");
+                        labels.Add("app.stack.name", "production");
+                    })
+                    .WithEnvironment(env => { env.Add("GOMEMLIMIT", "1280MiB"); })
+                    .WithVolumes("/data/config/jaeger:/config:ro")
+                    .WithPortMappings(
+                        new Port
+                        {
+                            Target = 16686,
+                            Published = 16686,
+                            Protocol = "tcp",
+                        },
+                        new Port
+                        {
+                            Target = 14269,
+                            Protocol = "tcp",
+                        }
+                    )
+                    .WithExtraHosts(
+                        "prometheus:${PROMETHEUS_HOST}",
+                        "elasticsearch:192.168.1.100"
+                    )
+                    .WithCommands(
+                        "--config=/config/jaeger.yaml",
+                        "--set=extensions.jaeger_query.base_path=/tracing"
+                    )
+                    .WithSwarm()
+                    .WithDeploy(deploy => deploy
+                        .WithLabels(labels =>
+                        {
+                            labels.Add("app.service", "jaeger");
+                            labels.Add("app.metrics.port", "14269");
+                            labels.Add("app.container.group", "services");
+                            labels.Add("app.stack.name", "production");
+                        })
+                        .WithReplicas(2)
+                        .WithUpdateConfig(c => c.WithProperty("delay", "30s"))
+                        .WithRestartPolicy(c => c
+                            .WithProperty("delay", "30s")
+                            .WithProperty("max_attempts", 10)
+                            .WithProperty("window", "120s")
+                        )
+                        .WithPlacement(c => c
+                            .WithProperty("constraints", new[] { "node.role == worker" })
+                            .WithProperty("preferences", new[] { new PlacementPreferences { Spread = "node.labels.zone" } })
+                        )
+                        .WithResources(c => c.WithProperty("limits", new Dictionary<string, string>
+                        {
+                            ["memory"] = "1600m",
+                        }))
+                    )
+                    .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              jaeger:
+                image: "jaegertracing/jaeger:2.14.1"
+                healthcheck:
+                  test: ["CMD-SHELL", "wget --no-verbose --tries=1 -q -O - http://localhost:14269/status | grep -q '\"healthy\":true' > /dev/null || exit 1"]
+                  interval: "1m"
+                  timeout: "10s"
+                  retries: 3
+                  start_period: "15s"
+                hostname: "jaeger"
+                networks:
+                - "app_network"
+                labels:
+                  app.service: "jaeger"
+                  app.metrics.port: "14269"
+                  app.container.group: "services"
+                  app.stack.name: "production"
+                environment:
+                  GOMEMLIMIT: "1280MiB"
+                volumes:
+                - "/data/config/jaeger:/config:ro"
+                ports:
+                - target: 16686
+                  published: 16686
+                  protocol: "tcp"
+                - target: 14269
+                  protocol: "tcp"
+                extra_hosts:
+                - "prometheus:${PROMETHEUS_HOST}"
+                - "elasticsearch:192.168.1.100"
+                command:
+                - "--config=/config/jaeger.yaml"
+                - "--set=extensions.jaeger_query.base_path=/tracing"
+                deploy:
+                  labels:
+                    app.service: "jaeger"
+                    app.metrics.port: "14269"
+                    app.container.group: "services"
+                    app.stack.name: "production"
+                  replicas: 2
+                  update_config:
+                    delay: "30s"
+                  restart_policy:
+                    delay: "30s"
+                    max_attempts: 10
+                    window: "120s"
+                  placement:
+                    constraints: ["node.role == worker"]
+                    preferences:
+                    - spread: "node.labels.zone"
+                  resources:
+                    limits:
+                      memory: "1600m"
 
             """,
             result

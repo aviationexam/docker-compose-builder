@@ -20,9 +20,9 @@ public class ForceQuotedStringValuesEventEmitter : ChainedEventEmitter
     public override void Emit(ScalarEventInfo eventInfo, IEmitter emitter)
     {
         var item = _state.Peek();
-        item.Move();
+        var shouldApply = item.ShouldApplyAndToggle();
 
-        if (item.ShouldApply() && eventInfo.Source.Type == typeof(string))
+        if (shouldApply && eventInfo.Source.Type == typeof(string))
         {
             eventInfo = new ScalarEventInfo(eventInfo.Source)
             {
@@ -35,7 +35,7 @@ public class ForceQuotedStringValuesEventEmitter : ChainedEventEmitter
 
     public override void Emit(MappingStartEventInfo eventInfo, IEmitter emitter)
     {
-        _state.Peek().Move();
+        _state.Peek().ConsumeValue();
         _state.Push(new EmitterState(EmitterState.EventType.Mapping));
         base.Emit(eventInfo, emitter);
     }
@@ -53,7 +53,7 @@ public class ForceQuotedStringValuesEventEmitter : ChainedEventEmitter
 
     public override void Emit(SequenceStartEventInfo eventInfo, IEmitter emitter)
     {
-        _state.Peek().Move();
+        _state.Peek().ConsumeValue();
         _state.Push(new EmitterState(EmitterState.EventType.Sequence));
         base.Emit(eventInfo, emitter);
     }
@@ -75,19 +75,27 @@ public class ForceQuotedStringValuesEventEmitter : ChainedEventEmitter
     {
         public EventType Type { get; } = eventType;
 
-        private int _currentIndex;
+        private bool _isAtKey = true;
 
-        public void Move()
+        public bool ShouldApplyAndToggle()
         {
-            _currentIndex++;
+            if (Type == EventType.Mapping)
+            {
+                var wasAtKey = _isAtKey;
+                _isAtKey = !_isAtKey;
+                return !wasAtKey;
+            }
+
+            return Type == EventType.Sequence;
         }
 
-        public bool ShouldApply() => Type switch
+        public void ConsumeValue()
         {
-            EventType.Mapping => _currentIndex % 2 == 0,
-            EventType.Sequence => true,
-            _ => false,
-        };
+            if (Type == EventType.Mapping)
+            {
+                _isAtKey = true;
+            }
+        }
 
         public enum EventType : byte
         {
