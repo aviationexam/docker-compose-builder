@@ -704,7 +704,7 @@ public class ComposeBuilderTests
                   target: "/run/secrets/custom_path"
                   uid: "1000"
                   gid: "1000"
-                  mode: 256
+                  mode: 0400
 
             """,
             result
@@ -807,7 +807,7 @@ public class ComposeBuilderTests
                   target: "/etc/app/config.json"
                   uid: "1000"
                   gid: "1000"
-                  mode: 292
+                  mode: 0444
 
             """,
             result
@@ -976,8 +976,162 @@ public class ComposeBuilderTests
         Assert.Equal("/run/secrets/custom", secret.Target);
         Assert.Equal("1000", secret.Uid);
         Assert.Equal("1000", secret.Gid);
-        Assert.Equal(256, secret.Mode); // 0400 octal = 256 decimal
+        Assert.NotNull(secret.Mode);
+        Assert.Equal(256, secret.Mode.Value.IntValue); // 0400 octal = 256 decimal
+        Assert.Equal(UnixFileModeNotation.Octal, secret.Mode.Value.Notation);
         Assert.False(secret.IsShortSyntax);
+    }
+
+    [Fact]
+    public void DeserializeServiceSecretsWithIntModeTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                secrets:
+                - source: my_secret
+                  target: /run/secrets/custom
+                  mode: 400
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Secrets);
+        Assert.Single(appService.Secrets);
+
+        var secret = appService.Secrets[0];
+        Assert.NotNull(secret.Mode);
+        Assert.Equal(400, secret.Mode.Value.IntValue);
+        Assert.Equal(UnixFileModeNotation.RawInt, secret.Mode.Value.Notation);
+    }
+
+    [Fact]
+    public void DeserializeServiceSecretsWithOctalOModeTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                secrets:
+                - source: my_secret
+                  target: /run/secrets/custom
+                  mode: 0o440
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Secrets);
+        Assert.Single(appService.Secrets);
+
+        var secret = appService.Secrets[0];
+        Assert.NotNull(secret.Mode);
+        Assert.Equal(288, secret.Mode.Value.IntValue); // 0o440 = 288 decimal
+        Assert.Equal(UnixFileModeNotation.OctalWithO, secret.Mode.Value.Notation);
+    }
+
+    [Fact]
+    public void ModeNotationRoundTripOctalTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSecrets(new ServiceSecret
+                {
+                    Source = "my_secret",
+                    Mode = UnixFileMode.Parse("0400")
+                })
+                .Build()
+            )
+            .Build();
+
+        var yaml = compose.Serialize();
+        Assert.Contains("mode: 0400", yaml);
+
+        var compose2 = ComposeExtensions.Deserialize(yaml);
+        var yaml2 = compose2.Serialize();
+        Assert.Equal(yaml, yaml2);
+    }
+
+    [Fact]
+    public void ModeNotationRoundTripOctalWithOTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSecrets(new ServiceSecret
+                {
+                    Source = "my_secret",
+                    Mode = UnixFileMode.Parse("0o440")
+                })
+                .Build()
+            )
+            .Build();
+
+        var yaml = compose.Serialize();
+        Assert.Contains("mode: 0o440", yaml);
+
+        var compose2 = ComposeExtensions.Deserialize(yaml);
+        var yaml2 = compose2.Serialize();
+        Assert.Equal(yaml, yaml2);
+    }
+
+    [Fact]
+    public void ModeNotationRawIntSerializesAsDecimalTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSecrets(new ServiceSecret
+                {
+                    Source = "my_secret",
+                    Mode = UnixFileMode.Parse("256")
+                })
+                .Build()
+            )
+            .Build();
+
+        var yaml = compose.Serialize();
+        Assert.Contains("mode: 256", yaml);
+    }
+
+    [Fact]
+    public void DeserializeServiceSecretsWithDecimalModeTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                secrets:
+                - source: my_secret
+                  target: /run/secrets/custom
+                  mode: 256
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Secrets);
+        Assert.Single(appService.Secrets);
+
+        var secret = appService.Secrets[0];
+        Assert.NotNull(secret.Mode);
+        Assert.Equal(256, secret.Mode.Value.IntValue);
+        Assert.Equal(UnixFileModeNotation.RawInt, secret.Mode.Value.Notation);
+
+        var serialized = compose.Serialize();
+        Assert.Contains("mode: 256", serialized);
     }
 
     [Fact]
