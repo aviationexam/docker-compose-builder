@@ -10,5 +10,5 @@ public class ServiceVolumeTmpfs
     public long? Size { get; set; }
 
     [YamlMember(Alias = "mode")]
-    public int? Mode { get; set; }
+    public UnixFileMode? Mode { get; set; }
 }

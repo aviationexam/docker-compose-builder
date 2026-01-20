@@ -20,7 +20,7 @@ public class ServiceConfig
     public string? Gid { get; set; }
 
     [YamlMember(Alias = "mode")]
-    public int? Mode { get; set; }
+    public UnixFileMode? Mode { get; set; }
 
     [YamlIgnore]
     public string? ShortSyntax { get; private set; }
