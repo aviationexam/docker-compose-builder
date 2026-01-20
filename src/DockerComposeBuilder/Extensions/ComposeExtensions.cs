@@ -15,6 +15,7 @@ public static class ComposeExtensions
         .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
         .WithTypeConverter(new YamlValueCollectionConverter())
         .WithTypeConverter(new PublishedPortConverter())
+        .WithTypeConverter(new UnixFileModeConverter())
         .WithTypeConverter(new ServiceVolumeCollectionConverter())
         .WithTypeConverter(new ServiceSecretCollectionConverter())
         .WithTypeConverter(new ServiceConfigCollectionConverter())
@@ -39,6 +40,7 @@ public static class ComposeExtensions
     {
         var builder = new DeserializerBuilder()
             .WithTypeConverter(new PublishedPortConverter())
+            .WithTypeConverter(new UnixFileModeConverter())
             .WithTypeConverter(new ServiceVolumeCollectionConverter())
             .WithTypeConverter(new ServiceSecretCollectionConverter())
             .WithTypeConverter(new ServiceConfigCollectionConverter())

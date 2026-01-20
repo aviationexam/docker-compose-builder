@@ -32,62 +32,11 @@ public class ServiceConfigCollectionConverter : IYamlTypeConverter
             }
             else if (parser.Current is MappingStart)
             {
-                parser.MoveNext();
-
-                string? source = null;
-                string? target = null;
-                string? uid = null;
-                string? gid = null;
-                int? mode = null;
-
-                while (parser.Current is not MappingEnd)
+                var item = rootDeserializer(typeof(ServiceConfig));
+                if (item is ServiceConfig config)
                 {
-                    if (parser.Current is Scalar keyScalar)
-                    {
-                        var key = keyScalar.Value;
-                        parser.MoveNext();
-
-                        if (parser.Current is Scalar valueScalar)
-                        {
-                            var value = valueScalar.Value;
-                            parser.MoveNext();
-
-                            switch (key)
-                            {
-                                case "source":
-                                    source = value;
-                                    break;
-                                case "target":
-                                    target = value;
-                                    break;
-                                case "uid":
-                                    uid = value;
-                                    break;
-                                case "gid":
-                                    gid = value;
-                                    break;
-                                case "mode":
-                                    mode = ParseMode(value);
-                                    break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        parser.MoveNext();
-                    }
+                    collection.Add(config);
                 }
-
-                parser.MoveNext(); // consume MappingEnd
-
-                collection.Add(new ServiceConfig
-                {
-                    Source = source,
-                    Target = target,
-                    Uid = uid,
-                    Gid = gid,
-                    Mode = mode
-                });
             }
             else
             {
@@ -111,12 +60,5 @@ public class ServiceConfigCollectionConverter : IYamlTypeConverter
         ).ToList();
 
         serializer(items, typeof(List<object>));
-    }
-
-    private static int ParseMode(string value)
-    {
-        if (value.StartsWith("0") && value.Length > 1)
-            return Convert.ToInt32(value, 8);
-        return int.Parse(value);
     }
 }
