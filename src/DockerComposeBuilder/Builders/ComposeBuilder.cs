@@ -59,6 +59,17 @@ public class ComposeBuilder : BaseBuilder<ComposeBuilder, Compose>
     );
 
     /// <summary>
+    /// Add configs to the compose object
+    /// </summary>
+    /// <param name="configs"></param>
+    /// <returns></returns>
+    public ComposeBuilder WithConfigs(params Config[] configs) => WithT(
+        () => WorkingObject.Configs,
+        x => WorkingObject.Configs = x,
+        configs
+    );
+
+    /// <summary>
     /// Add services to the Compose object
     /// </summary>
     /// <returns></returns>
