@@ -4,6 +4,7 @@ using DockerComposeBuilder.Model;
 using DockerComposeBuilder.Model.Services;
 using DockerComposeBuilder.Model.Services.BuildArguments;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace DockerComposeBuilder.Tests;
@@ -640,5 +641,666 @@ public class ComposeBuilderTests
             """,
             result
         );
+    }
+
+    [Fact]
+    public void ServiceWithShortSyntaxSecretsTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSecrets("my_secret", "another_secret")
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                secrets:
+                - "my_secret"
+                - "another_secret"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void ServiceWithLongSyntaxSecretsTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSecrets(new ServiceSecret
+                {
+                    Source = "my_secret",
+                    Target = "/run/secrets/custom_path",
+                    Uid = "1000",
+                    Gid = "1000",
+                    Mode = 256 // 0400 in octal
+                })
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                secrets:
+                - source: "my_secret"
+                  target: "/run/secrets/custom_path"
+                  uid: "1000"
+                  gid: "1000"
+                  mode: 0400
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void ServiceWithMixedSyntaxSecretsTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSecrets("simple_secret")
+                .WithSecrets(new ServiceSecret
+                {
+                    Source = "detailed_secret",
+                    Target = "/custom/path"
+                })
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                secrets:
+                - "simple_secret"
+                - source: "detailed_secret"
+                  target: "/custom/path"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void ServiceWithShortSyntaxConfigsTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithConfigs("my_config", "another_config")
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                configs:
+                - "my_config"
+                - "another_config"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void ServiceWithLongSyntaxConfigsTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithConfigs(new ServiceConfig
+                {
+                    Source = "my_config",
+                    Target = "/etc/app/config.json",
+                    Uid = "1000",
+                    Gid = "1000",
+                    Mode = 292 // 0444 in octal
+                })
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                configs:
+                - source: "my_config"
+                  target: "/etc/app/config.json"
+                  uid: "1000"
+                  gid: "1000"
+                  mode: 0444
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void TopLevelConfigsWithBuilderTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithConfigs("app_config")
+                .Build()
+            )
+            .WithConfigs(
+                Builder.MakeConfig("app_config")
+                    .WithFile("./config/app.json")
+                    .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                configs:
+                - "app_config"
+            configs:
+              app_config:
+                file: "./config/app.json"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void TopLevelEnvironmentSecretTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSecrets("db_password")
+                .Build()
+            )
+            .WithSecrets(
+                Builder.MakeSecret("db_password")
+                    .WithEnvironment("DB_PASSWORD_ENV")
+                    .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                secrets:
+                - "db_password"
+            secrets:
+              db_password:
+                environment: "DB_PASSWORD_ENV"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void TopLevelEnvironmentConfigTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithConfigs("app_config")
+                .Build()
+            )
+            .WithConfigs(
+                Builder.MakeConfig("app_config")
+                    .WithEnvironment("APP_CONFIG_ENV")
+                    .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                configs:
+                - "app_config"
+            configs:
+              app_config:
+                environment: "APP_CONFIG_ENV"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void DeserializeServiceSecretsShortSyntaxTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                secrets:
+                - my_secret
+                - another_secret
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Secrets);
+        Assert.Equal(2, appService.Secrets.Count);
+        Assert.Equal("my_secret", appService.Secrets[0].Source);
+        Assert.Equal("another_secret", appService.Secrets[1].Source);
+        Assert.True(appService.Secrets[0].IsShortSyntax);
+    }
+
+    [Fact]
+    public void DeserializeServiceSecretsLongSyntaxTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                secrets:
+                - source: my_secret
+                  target: /run/secrets/custom
+                  uid: "1000"
+                  gid: "1000"
+                  mode: 0400
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Secrets);
+        Assert.Single(appService.Secrets);
+
+        var secret = appService.Secrets[0];
+        Assert.Equal("my_secret", secret.Source);
+        Assert.Equal("/run/secrets/custom", secret.Target);
+        Assert.Equal("1000", secret.Uid);
+        Assert.Equal("1000", secret.Gid);
+        Assert.NotNull(secret.Mode);
+        Assert.Equal(256, secret.Mode.Value.IntValue); // 0400 octal = 256 decimal
+        Assert.Equal(UnixFileModeNotation.Octal, secret.Mode.Value.Notation);
+        Assert.False(secret.IsShortSyntax);
+    }
+
+    [Fact]
+    public void DeserializeServiceSecretsWithIntModeTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                secrets:
+                - source: my_secret
+                  target: /run/secrets/custom
+                  mode: 400
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Secrets);
+        Assert.Single(appService.Secrets);
+
+        var secret = appService.Secrets[0];
+        Assert.NotNull(secret.Mode);
+        Assert.Equal(400, secret.Mode.Value.IntValue);
+        Assert.Equal(UnixFileModeNotation.RawInt, secret.Mode.Value.Notation);
+    }
+
+    [Fact]
+    public void DeserializeServiceSecretsWithOctalOModeTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                secrets:
+                - source: my_secret
+                  target: /run/secrets/custom
+                  mode: 0o440
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Secrets);
+        Assert.Single(appService.Secrets);
+
+        var secret = appService.Secrets[0];
+        Assert.NotNull(secret.Mode);
+        Assert.Equal(288, secret.Mode.Value.IntValue); // 0o440 = 288 decimal
+        Assert.Equal(UnixFileModeNotation.OctalWithO, secret.Mode.Value.Notation);
+    }
+
+    [Fact]
+    public void ModeNotationRoundTripOctalTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSecrets(new ServiceSecret
+                {
+                    Source = "my_secret",
+                    Mode = UnixFileMode.Parse("0400")
+                })
+                .Build()
+            )
+            .Build();
+
+        var yaml = compose.Serialize();
+        Assert.Contains("mode: 0400", yaml);
+
+        var compose2 = ComposeExtensions.Deserialize(yaml);
+        var yaml2 = compose2.Serialize();
+        Assert.Equal(yaml, yaml2);
+    }
+
+    [Fact]
+    public void ModeNotationRoundTripOctalWithOTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSecrets(new ServiceSecret
+                {
+                    Source = "my_secret",
+                    Mode = UnixFileMode.Parse("0o440")
+                })
+                .Build()
+            )
+            .Build();
+
+        var yaml = compose.Serialize();
+        Assert.Contains("mode: 0o440", yaml);
+
+        var compose2 = ComposeExtensions.Deserialize(yaml);
+        var yaml2 = compose2.Serialize();
+        Assert.Equal(yaml, yaml2);
+    }
+
+    [Fact]
+    public void ModeNotationRawIntSerializesAsDecimalTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSecrets(new ServiceSecret
+                {
+                    Source = "my_secret",
+                    Mode = UnixFileMode.Parse("256")
+                })
+                .Build()
+            )
+            .Build();
+
+        var yaml = compose.Serialize();
+        Assert.Contains("mode: 256", yaml);
+    }
+
+    [Fact]
+    public void DeserializeServiceSecretsWithDecimalModeTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                secrets:
+                - source: my_secret
+                  target: /run/secrets/custom
+                  mode: 256
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Secrets);
+        Assert.Single(appService.Secrets);
+
+        var secret = appService.Secrets[0];
+        Assert.NotNull(secret.Mode);
+        Assert.Equal(256, secret.Mode.Value.IntValue);
+        Assert.Equal(UnixFileModeNotation.RawInt, secret.Mode.Value.Notation);
+
+        var serialized = compose.Serialize();
+        Assert.Contains("mode: 256", serialized);
+    }
+
+    [Fact]
+    public void DeserializeServiceConfigsTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                configs:
+                - simple_config
+                - source: detailed_config
+                  target: /etc/app/config.json
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Configs);
+        Assert.Equal(2, appService.Configs.Count);
+
+        Assert.Equal("simple_config", appService.Configs[0].Source);
+        Assert.True(appService.Configs[0].IsShortSyntax);
+
+        Assert.Equal("detailed_config", appService.Configs[1].Source);
+        Assert.Equal("/etc/app/config.json", appService.Configs[1].Target);
+        Assert.False(appService.Configs[1].IsShortSyntax);
+    }
+
+    [Fact]
+    public void SecretsSupportsForEachWithStringTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(
+                Builder.MakeService("app")
+                    .WithImage("myapp:latest")
+                    .WithSecrets("secret1", "secret2")
+                    .Build()
+            )
+            .Build();
+
+        var appService = compose.Services!["app"];
+        var secretStrings = new List<string>();
+
+        // This is the backwards-compatible pattern that must work
+        foreach (string s in appService.Secrets!)
+        {
+            secretStrings.Add(s);
+        }
+
+        Assert.Equal(2, secretStrings.Count);
+        Assert.Equal("secret1", secretStrings[0]);
+        Assert.Equal("secret2", secretStrings[1]);
+    }
+
+    [Fact]
+    public void ConfigsSupportsForEachWithStringTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(
+                Builder.MakeService("app")
+                    .WithImage("myapp:latest")
+                    .WithConfigs("config1", "config2")
+                    .Build()
+            )
+            .Build();
+
+        var appService = compose.Services!["app"];
+        var configStrings = new List<string>();
+
+        // This is the backwards-compatible pattern that must work
+        foreach (string c in appService.Configs!)
+        {
+            configStrings.Add(c);
+        }
+
+        Assert.Equal(2, configStrings.Count);
+        Assert.Equal("config1", configStrings[0]);
+        Assert.Equal("config2", configStrings[1]);
+    }
+
+    [Fact]
+    public void ImplicitSecretConversionTest()
+    {
+        ServiceSecret secret = "my_secret";
+        Assert.Equal("my_secret", secret.Source);
+        Assert.True(secret.IsShortSyntax);
+
+        string source = secret;
+        Assert.Equal("my_secret", source);
+    }
+
+    [Fact]
+    public void ImplicitConfigConversionTest()
+    {
+        ServiceConfig config = "my_config";
+        Assert.Equal("my_config", config.Source);
+        Assert.True(config.IsShortSyntax);
+
+        string source = config;
+        Assert.Equal("my_config", source);
+    }
+
+    [Fact]
+    public void ExternalTopLevelConfigTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithConfigs("external_config")
+                .Build()
+            )
+            .WithConfigs(
+                Builder.MakeConfig("external_config")
+                    .SetExternal(true)
+                    .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                configs:
+                - "external_config"
+            configs:
+              external_config:
+                external: true
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void RoundTripSecretsAndConfigsTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(
+                Builder.MakeService("app")
+                    .WithImage("myapp:latest")
+                    .WithSecrets("simple_secret")
+                    .WithSecrets(new ServiceSecret { Source = "detailed_secret", Target = "/custom/path" })
+                    .WithConfigs("simple_config")
+                    .WithConfigs(new ServiceConfig { Source = "detailed_config", Target = "/etc/config" })
+                    .Build()
+            )
+            .WithSecrets(
+                Builder.MakeSecret("simple_secret").WithFile("./secrets/simple.txt").Build(),
+                Builder.MakeSecret("detailed_secret").WithFile("./secrets/detailed.txt").Build()
+            )
+            .WithConfigs(
+                Builder.MakeConfig("simple_config").WithFile("./config/simple.json").Build(),
+                Builder.MakeConfig("detailed_config").WithFile("./config/detailed.json").Build()
+            )
+            .Build();
+
+        var yaml1 = compose.Serialize();
+        var compose2 = ComposeExtensions.Deserialize(yaml1);
+        var yaml2 = compose2.Serialize();
+
+        Assert.Equal(yaml1, yaml2);
     }
 }

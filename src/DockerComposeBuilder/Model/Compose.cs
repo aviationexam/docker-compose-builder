@@ -19,6 +19,9 @@ public class Compose
     [YamlMember(Alias = "secrets")]
     public IDictionary<string, Secret>? Secrets { get; set; }
 
+    [YamlMember(Alias = "configs")]
+    public IDictionary<string, Config>? Configs { get; set; }
+
     [YamlMember(Alias = "volumes")]
     public IDictionary<string, Volume>? Volumes { get; set; }
 }
