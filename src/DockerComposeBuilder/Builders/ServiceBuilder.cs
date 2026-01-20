@@ -198,10 +198,15 @@ public class ServiceBuilder : BaseBuilder<ServiceBuilder, Service>
 
     public ServiceBuilder WithSecrets(params string[] secrets)
     {
-        if (WorkingObject.Secrets == null)
-        {
-            WorkingObject.Secrets = new List<string>();
-        }
+        WorkingObject.Secrets ??= new ServiceSecretCollection();
+
+        WorkingObject.Secrets.AddRange(secrets);
+        return this;
+    }
+
+    public ServiceBuilder WithSecrets(params ServiceSecret[] secrets)
+    {
+        WorkingObject.Secrets ??= new ServiceSecretCollection();
 
         WorkingObject.Secrets.AddRange(secrets);
         return this;
@@ -210,6 +215,27 @@ public class ServiceBuilder : BaseBuilder<ServiceBuilder, Service>
     public ServiceBuilder WithSecrets(params Secret[] secrets)
     {
         return WithSecrets(secrets.Select(t => t.Name).ToArray());
+    }
+
+    public ServiceBuilder WithConfigs(params string[] configs)
+    {
+        WorkingObject.Configs ??= new ServiceConfigCollection();
+
+        WorkingObject.Configs.AddRange(configs);
+        return this;
+    }
+
+    public ServiceBuilder WithConfigs(params ServiceConfig[] configs)
+    {
+        WorkingObject.Configs ??= new ServiceConfigCollection();
+
+        WorkingObject.Configs.AddRange(configs);
+        return this;
+    }
+
+    public ServiceBuilder WithConfigs(params Config[] configs)
+    {
+        return WithConfigs(configs.Select(t => t.Name).ToArray());
     }
 
     public SwarmServiceBuilder WithSwarm()

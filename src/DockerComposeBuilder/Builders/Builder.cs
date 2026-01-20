@@ -37,6 +37,15 @@ public class Builder
         return new SecretBuilder().WithName(name);
     }
 
+    public static ConfigBuilder MakeConfig()
+    {
+        return new ConfigBuilder();
+    }
+
+    public static ConfigBuilder MakeConfig(string name)
+    {
+        return new ConfigBuilder().WithName(name);
+    }
 
     public static NetworkBuilder MakeNetwork()
     {
