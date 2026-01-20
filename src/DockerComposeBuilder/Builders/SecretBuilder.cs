@@ -18,4 +18,9 @@ public class SecretBuilder : BuilderBase<SecretBuilder, Secret>
     {
         return WithProperty("external", isExternal);
     }
+
+    public SecretBuilder WithEnvironment(string environmentVariable)
+    {
+        return WithProperty("environment", environmentVariable);
+    }
 }

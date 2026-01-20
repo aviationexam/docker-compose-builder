@@ -58,8 +58,11 @@ public class Service : IObject
     [YamlMember(Alias = "expose")]
     public List<string>? Expose { get; set; }
 
+    [YamlMember(Alias = "configs")]
+    public ServiceConfigCollection? Configs { get; set; }
+
     [YamlMember(Alias = "secrets")]
-    public List<string>? Secrets { get; set; }
+    public ServiceSecretCollection? Secrets { get; set; }
 
     [YamlMember(Alias = "depends_on")]
     public List<string>? DependsOn { get; set; }
