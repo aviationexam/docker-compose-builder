@@ -8,6 +8,9 @@ namespace DockerComposeBuilder.Model.Services;
 [Serializable]
 public class Deploy
 {
+    [YamlMember(Alias = "endpoint_mode")]
+    public EEndpointMode? EndpointMode { get; set; }
+
     [YamlMember(Alias = "labels")]
     public IDictionary<string, string>? Labels { get; set; }
 
@@ -18,14 +21,14 @@ public class Deploy
     public int? Replicas { get; set; }
 
     [YamlMember(Alias = "update_config")]
-    public Map? UpdateConfig { get; set; }
+    public UpdateConfig? UpdateConfig { get; set; }
 
     [YamlMember(Alias = "restart_policy")]
-    public Map? RestartPolicy { get; set; }
+    public RestartPolicy? RestartPolicy { get; set; }
 
     [YamlMember(Alias = "placement")]
-    public Map? Placement { get; set; }
+    public Placement? Placement { get; set; }
 
     [YamlMember(Alias = "resources")]
-    public Map? Resources { get; set; }
+    public Resources? Resources { get; set; }
 }
