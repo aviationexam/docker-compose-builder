@@ -644,6 +644,148 @@ public class ComposeBuilderTests
     }
 
     [Fact]
+    public void TypedSerializeJaegerServiceTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(
+                Builder.MakeService("jaeger")
+                    .WithImage("jaegertracing/jaeger:2.14.1")
+                    .WithHealthCheck(healthCheck =>
+                    {
+                        healthCheck.TestCommand =
+                        [
+                            "CMD-SHELL",
+                            "wget --no-verbose --tries=1 -q -O - http://localhost:14269/status | grep -q '\"healthy\":true' > /dev/null || exit 1"
+                        ];
+                        healthCheck.Interval = "1m";
+                        healthCheck.Timeout = "10s";
+                        healthCheck.Retries = 3;
+                        healthCheck.StartPeriod = "15s";
+                    })
+                    .WithHostname("jaeger")
+                    .WithNetworks("app_network")
+                    .WithLabels(labels =>
+                    {
+                        labels.Add("app.service", "jaeger");
+                        labels.Add("app.metrics.port", "14269");
+                        labels.Add("app.container.group", "services");
+                        labels.Add("app.stack.name", "production");
+                    })
+                    .WithEnvironment(env => { env.Add("GOMEMLIMIT", "1280MiB"); })
+                    .WithVolumes("/data/config/jaeger:/config:ro")
+                    .WithPortMappings(
+                        new Port
+                        {
+                            Target = 16686,
+                            Published = 16686,
+                            Protocol = "tcp",
+                        },
+                        new Port
+                        {
+                            Target = 14269,
+                            Protocol = "tcp",
+                        }
+                    )
+                    .WithExtraHosts(
+                        "prometheus:${PROMETHEUS_HOST}",
+                        "elasticsearch:192.168.1.100"
+                    )
+                    .WithCommands(
+                        "--config=/config/jaeger.yaml",
+                        "--set=extensions.jaeger_query.base_path=/tracing"
+                    )
+                    .WithSwarm()
+                    .WithDeploy(deploy => deploy
+                        .WithLabels(labels =>
+                        {
+                            labels.Add("app.service", "jaeger");
+                            labels.Add("app.metrics.port", "14269");
+                            labels.Add("app.container.group", "services");
+                            labels.Add("app.stack.name", "production");
+                        })
+                        .WithReplicas(2)
+                        .WithUpdateConfig(c => c.WithDelay("30s"))
+                        .WithRestartPolicy(c => c
+                            .WithDelay("30s")
+                            .WithMaxAttempts(10)
+                            .WithWindow("120s")
+                        )
+                        .WithPlacement(c => c
+                            .WithConstraints("node.role == worker")
+                            .WithPreference("node.labels.zone")
+                        )
+                        .WithResources(c => c.WithLimits(l => l.WithMemory("1600m")))
+                    )
+                    .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              jaeger:
+                image: "jaegertracing/jaeger:2.14.1"
+                healthcheck:
+                  test: ["CMD-SHELL", "wget --no-verbose --tries=1 -q -O - http://localhost:14269/status | grep -q '\"healthy\":true' > /dev/null || exit 1"]
+                  interval: "1m"
+                  timeout: "10s"
+                  retries: 3
+                  start_period: "15s"
+                hostname: "jaeger"
+                networks:
+                - "app_network"
+                labels:
+                  app.service: "jaeger"
+                  app.metrics.port: "14269"
+                  app.container.group: "services"
+                  app.stack.name: "production"
+                environment:
+                  GOMEMLIMIT: "1280MiB"
+                volumes:
+                - "/data/config/jaeger:/config:ro"
+                ports:
+                - target: 16686
+                  published: 16686
+                  protocol: "tcp"
+                - target: 14269
+                  protocol: "tcp"
+                extra_hosts:
+                - "prometheus:${PROMETHEUS_HOST}"
+                - "elasticsearch:192.168.1.100"
+                command:
+                - "--config=/config/jaeger.yaml"
+                - "--set=extensions.jaeger_query.base_path=/tracing"
+                deploy:
+                  labels:
+                    app.service: "jaeger"
+                    app.metrics.port: "14269"
+                    app.container.group: "services"
+                    app.stack.name: "production"
+                  replicas: 2
+                  update_config:
+                    delay: "30s"
+                  restart_policy:
+                    delay: "30s"
+                    max_attempts: 10
+                    window: "120s"
+                  placement:
+                    constraints: ["node.role == worker"]
+                    preferences:
+                    - spread: "node.labels.zone"
+                  resources:
+                    limits:
+                      memory: "1600m"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
     public void ServiceWithShortSyntaxSecretsTest()
     {
         var compose = Builder.MakeCompose()
@@ -1302,5 +1444,496 @@ public class ComposeBuilderTests
         var yaml2 = compose2.Serialize();
 
         Assert.Equal(yaml1, yaml2);
+    }
+
+    [Fact]
+    public void ServiceWithTypedDeployResourcesTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSwarm().WithDeploy(deploy => deploy
+                    .WithResources(resources => resources
+                        .WithLimits(limits => limits
+                            .WithCpus("0.5")
+                            .WithMemory("512M")
+                        )
+                        .WithReservations(reservations => reservations
+                            .WithCpus("0.25")
+                            .WithMemory("256M")
+                        )
+                    )
+                )
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                deploy:
+                  resources:
+                    limits:
+                      cpus: "0.5"
+                      memory: "512M"
+                    reservations:
+                      cpus: "0.25"
+                      memory: "256M"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void ServiceWithTypedDeployRestartPolicyTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSwarm().WithDeploy(deploy => deploy
+                    .WithRestartPolicy(policy => policy
+                        .WithCondition(Enums.ERestartCondition.OnFailure)
+                        .WithDelay("5s")
+                        .WithMaxAttempts(3)
+                        .WithWindow("120s")
+                    )
+                )
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                deploy:
+                  restart_policy:
+                    condition: on-failure
+                    delay: "5s"
+                    max_attempts: 3
+                    window: "120s"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void ServiceWithTypedDeployPlacementTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSwarm().WithDeploy(deploy => deploy
+                    .WithPlacement(placement => placement
+                        .WithConstraints("node.role == worker", "node.labels.zone == us-east")
+                        .WithPreference("node.labels.zone")
+                        .WithMaxReplicasPerNode(2)
+                    )
+                )
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                deploy:
+                  placement:
+                    constraints: ["node.role == worker", "node.labels.zone == us-east"]
+                    preferences:
+                    - spread: "node.labels.zone"
+                    max_replicas_per_node: 2
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void ServiceWithTypedDeployUpdateConfigTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSwarm().WithDeploy(deploy => deploy
+                    .WithUpdateConfig(config => config
+                        .WithParallelism(2)
+                        .WithDelay("10s")
+                        .WithFailureAction(Enums.EUpdateFailureAction.Rollback)
+                        .WithMonitor("60s")
+                        .WithMaxFailureRatio(0.3)
+                        .WithOrder(Enums.EUpdateOrder.StartFirst)
+                    )
+                )
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                deploy:
+                  update_config:
+                    parallelism: 2
+                    delay: "10s"
+                    failure_action: rollback
+                    monitor: "60s"
+                    max_failure_ratio: 0.3
+                    order: start-first
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void ServiceWithTypedDeployEndpointModeTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSwarm().WithDeploy(deploy => deploy
+                    .WithEndpointMode(Enums.EEndpointMode.DnsRoundRobin)
+                    .WithReplicas(3)
+                )
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                deploy:
+                  endpoint_mode: dnsrr
+                  replicas: 3
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void ServiceWithFullTypedDeployConfigTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("web")
+                .WithImage("nginx:latest")
+                .WithSwarm().WithDeploy(deploy => deploy
+                    .WithEndpointMode(Enums.EEndpointMode.Vip)
+                    .WithMode(Enums.EReplicationMode.Replicated)
+                    .WithReplicas(3)
+                    .WithLabels(labels =>
+                    {
+                        labels.Add("com.example.env", "production");
+                    })
+                    .WithResources(resources => resources
+                        .WithLimits(limits => limits
+                            .WithCpus("1")
+                            .WithMemory("1G")
+                        )
+                        .WithReservations(reservations => reservations
+                            .WithCpus("0.5")
+                            .WithMemory("512M")
+                        )
+                    )
+                    .WithRestartPolicy(policy => policy
+                        .WithCondition(Enums.ERestartCondition.Any)
+                        .WithDelay("5s")
+                        .WithMaxAttempts(3)
+                    )
+                    .WithUpdateConfig(config => config
+                        .WithParallelism(1)
+                        .WithDelay("10s")
+                        .WithOrder(Enums.EUpdateOrder.StopFirst)
+                    )
+                    .WithPlacement(placement => placement
+                        .WithConstraints("node.role == worker")
+                    )
+                )
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              web:
+                image: "nginx:latest"
+                deploy:
+                  endpoint_mode: vip
+                  labels:
+                    com.example.env: "production"
+                  mode: replicated
+                  replicas: 3
+                  update_config:
+                    parallelism: 1
+                    delay: "10s"
+                    order: stop-first
+                  restart_policy:
+                    condition: any
+                    delay: "5s"
+                    max_attempts: 3
+                  placement:
+                    constraints: ["node.role == worker"]
+                  resources:
+                    limits:
+                      cpus: "1"
+                      memory: "1G"
+                    reservations:
+                      cpus: "0.5"
+                      memory: "512M"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void DeserializeDeployResourcesTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                deploy:
+                  resources:
+                    limits:
+                      cpus: "0.5"
+                      memory: 512M
+                    reservations:
+                      cpus: "0.25"
+                      memory: 256M
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Deploy);
+        Assert.NotNull(appService.Deploy.Resources);
+        Assert.NotNull(appService.Deploy.Resources.Limits);
+        Assert.Equal("0.5", appService.Deploy.Resources.Limits.Cpus);
+        Assert.Equal("512M", appService.Deploy.Resources.Limits.Memory);
+        Assert.NotNull(appService.Deploy.Resources.Reservations);
+        Assert.Equal("0.25", appService.Deploy.Resources.Reservations.Cpus);
+        Assert.Equal("256M", appService.Deploy.Resources.Reservations.Memory);
+    }
+
+    [Fact]
+    public void DeserializeDeployRestartPolicyTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                deploy:
+                  restart_policy:
+                    condition: on-failure
+                    delay: 5s
+                    max_attempts: 3
+                    window: 120s
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Deploy);
+        Assert.NotNull(appService.Deploy.RestartPolicy);
+        Assert.Equal(Enums.ERestartCondition.OnFailure, appService.Deploy.RestartPolicy.Condition);
+        Assert.Equal("5s", appService.Deploy.RestartPolicy.Delay);
+        Assert.Equal(3, appService.Deploy.RestartPolicy.MaxAttempts);
+        Assert.Equal("120s", appService.Deploy.RestartPolicy.Window);
+    }
+
+    [Fact]
+    public void DeserializeDeployPlacementTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                deploy:
+                  placement:
+                    constraints:
+                    - node.role == worker
+                    max_replicas_per_node: 2
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Deploy);
+        Assert.NotNull(appService.Deploy.Placement);
+        Assert.NotNull(appService.Deploy.Placement.Constraints);
+        Assert.Single(appService.Deploy.Placement.Constraints);
+        Assert.Equal("node.role == worker", appService.Deploy.Placement.Constraints[0]);
+        Assert.Equal(2, appService.Deploy.Placement.MaxReplicasPerNode);
+    }
+
+    [Fact]
+    public void DeserializeDeployUpdateConfigTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                deploy:
+                  update_config:
+                    parallelism: 2
+                    delay: 10s
+                    failure_action: rollback
+                    order: start-first
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Deploy);
+        Assert.NotNull(appService.Deploy.UpdateConfig);
+        Assert.Equal(2, appService.Deploy.UpdateConfig.Parallelism);
+        Assert.Equal("10s", appService.Deploy.UpdateConfig.Delay);
+        Assert.Equal(Enums.EUpdateFailureAction.Rollback, appService.Deploy.UpdateConfig.FailureAction);
+        Assert.Equal(Enums.EUpdateOrder.StartFirst, appService.Deploy.UpdateConfig.Order);
+    }
+
+    [Fact]
+    public void DeserializeDeployEndpointModeTest()
+    {
+        var yaml = // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: myapp:latest
+                deploy:
+                  endpoint_mode: dnsrr
+                  replicas: 3
+            """;
+
+        var compose = ComposeExtensions.Deserialize(yaml);
+
+        Assert.NotNull(compose.Services);
+        var appService = compose.Services["app"];
+        Assert.NotNull(appService.Deploy);
+        Assert.Equal(Enums.EEndpointMode.DnsRoundRobin, appService.Deploy.EndpointMode);
+        Assert.Equal(3, appService.Deploy.Replicas);
+    }
+
+    [Fact]
+    public void DeployWithMapBuilderBackwardsCompatibilityTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSwarm().WithDeploy(deploy => deploy
+                    .WithUpdateConfig(c => c.WithProperty("delay", "30s").WithProperty("parallelism", 2))
+                    .WithRestartPolicy(c => c.WithProperty("condition", "on-failure").WithProperty("delay", "5s"))
+                    .WithPlacement(c => c.WithProperty("max_replicas_per_node", 3))
+                    .WithResources(c => c
+                        .WithMap("limits", l => l.WithProperty("memory", "512M"))
+                        .WithMap("reservations", r => r.WithProperty("cpus", "0.25"))
+                    )
+                )
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Equal(
+            // language=yaml
+            """
+            version: "3.8"
+            services:
+              app:
+                image: "myapp:latest"
+                deploy:
+                  update_config:
+                    parallelism: 2
+                    delay: "30s"
+                  restart_policy:
+                    condition: on-failure
+                    delay: "5s"
+                  placement:
+                    max_replicas_per_node: 3
+                  resources:
+                    limits:
+                      memory: "512M"
+                    reservations:
+                      cpus: "0.25"
+
+            """,
+            result
+        );
+    }
+
+    [Fact]
+    public void DeployMapBuilderWithEnumValuesTest()
+    {
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("app")
+                .WithImage("myapp:latest")
+                .WithSwarm().WithDeploy(deploy => deploy
+                    .WithUpdateConfig(c => c
+                        .WithProperty("failure_action", "rollback")
+                        .WithProperty("order", "start-first")
+                    )
+                    .WithRestartPolicy(c => c.WithProperty("condition", "any"))
+                )
+                .Build()
+            )
+            .Build();
+
+        var result = compose.Serialize();
+
+        Assert.Contains("failure_action: rollback", result);
+        Assert.Contains("order: start-first", result);
+        Assert.Contains("condition: any", result);
     }
 }
