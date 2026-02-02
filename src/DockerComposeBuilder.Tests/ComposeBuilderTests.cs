@@ -634,7 +634,8 @@ public class ComposeBuilderTests
                     max_attempts: 10
                     window: "120s"
                   placement:
-                    constraints: ["node.role == worker"]
+                    constraints:
+                    - "node.role == worker"
                     preferences:
                     - spread: "node.labels.zone"
                   resources:
@@ -776,7 +777,8 @@ public class ComposeBuilderTests
                     max_attempts: 10
                     window: "120s"
                   placement:
-                    constraints: ["node.role == worker"]
+                    constraints:
+                    - "node.role == worker"
                     preferences:
                     - spread: "node.labels.zone"
                   resources:
@@ -1561,7 +1563,9 @@ public class ComposeBuilderTests
                 image: "myapp:latest"
                 deploy:
                   placement:
-                    constraints: ["node.role == worker", "node.labels.zone == us-east"]
+                    constraints:
+                    - "node.role == worker"
+                    - "node.labels.zone == us-east"
                     preferences:
                     - spread: "node.labels.zone"
                     max_replicas_per_node: 2
@@ -1712,7 +1716,8 @@ public class ComposeBuilderTests
                     delay: "5s"
                     max_attempts: 3
                   placement:
-                    constraints: ["node.role == worker"]
+                    constraints:
+                    - "node.role == worker"
                   resources:
                     limits:
                       cpus: "1"

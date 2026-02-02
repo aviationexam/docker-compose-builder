@@ -212,7 +212,7 @@ public class DeployBuilder : BaseBuilder<DeployBuilder, Deploy>
 
         if (map.TryGetValue("constraints", out var c) && c is IEnumerable<object> constraints)
         {
-            placement.Constraints = constraints.Select(x => x.ToString()!).ToArray();
+            placement.Constraints = constraints.Select(x => x.ToString()!).ToList();
         }
 
         if (map.TryGetValue("preferences", out var p) && p is IEnumerable<object> prefs)

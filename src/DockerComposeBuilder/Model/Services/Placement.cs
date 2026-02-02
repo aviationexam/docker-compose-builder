@@ -8,10 +8,10 @@ namespace DockerComposeBuilder.Model.Services;
 public class Placement
 {
     [YamlMember(Alias = "constraints")]
-    public IReadOnlyList<string>? Constraints { get; set; }
+    public List<string>? Constraints { get; set; }
 
     [YamlMember(Alias = "preferences")]
-    public ICollection<PlacementPreference>? Preferences { get; set; }
+    public List<PlacementPreference>? Preferences { get; set; }
 
     [YamlMember(Alias = "max_replicas_per_node")]
     public int? MaxReplicasPerNode { get; set; }
