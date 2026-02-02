@@ -11,7 +11,7 @@ public class PlacementBuilder : BaseBuilder<PlacementBuilder, Placement>
     {
     }
 
-    public PlacementBuilder WithConstraints(params IReadOnlyCollection<string> constraints)
+    public PlacementBuilder WithConstraints(params IReadOnlyList<string> constraints)
     {
         if (WorkingObject.Constraints == null)
         {

@@ -220,7 +220,7 @@ public class DeployBuilder : BaseBuilder<DeployBuilder, Deploy>
             placement.Preferences = prefs
                 .Select(x =>
                 {
-                    if (x is PlacementPreference { Spread: var spread})
+                    if (x is PlacementPreference { Spread: var spread })
                     {
                         return new PlacementPreference { Spread = spread };
                     }

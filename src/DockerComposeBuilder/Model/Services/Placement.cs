@@ -8,7 +8,7 @@ namespace DockerComposeBuilder.Model.Services;
 public class Placement
 {
     [YamlMember(Alias = "constraints")]
-    public IReadOnlyCollection<string>? Constraints { get; set; }
+    public IReadOnlyList<string>? Constraints { get; set; }
 
     [YamlMember(Alias = "preferences")]
     public ICollection<PlacementPreference>? Preferences { get; set; }

@@ -550,7 +550,9 @@ public class ComposeBuilderTests
                         "--set=extensions.jaeger_query.base_path=/tracing"
                     )
                     .WithSwarm()
-                    .WithDeploy(deploy => deploy
+                    .WithDeploy(deploy =>
+#pragma warning disable CS0618 // Type or member is obsolete
+                            deploy
                         .WithLabels(labels =>
                         {
                             labels.Add("app.service", "jaeger");
@@ -567,12 +569,13 @@ public class ComposeBuilderTests
                         )
                         .WithPlacement(c => c
                             .WithProperty("constraints", new[] { "node.role == worker" })
-                            .WithProperty("preferences", new[] { new PlacementPreferences { Spread = "node.labels.zone" } })
+                            .WithProperty("preferences", new[] { new PlacementPreference { Spread = "node.labels.zone" } })
                         )
                         .WithResources(c => c.WithProperty("limits", new Dictionary<string, string>
                         {
                             ["memory"] = "1600m",
                         }))
+#pragma warning restore CS0618 // Type or member is obsolete
                     )
                     .Build()
             )
@@ -1871,7 +1874,9 @@ public class ComposeBuilderTests
         var compose = Builder.MakeCompose()
             .WithServices(Builder.MakeService("app")
                 .WithImage("myapp:latest")
-                .WithSwarm().WithDeploy(deploy => deploy
+                .WithSwarm().WithDeploy(deploy =>
+#pragma warning disable CS0618 // Type or member is obsolete
+                        deploy
                     .WithUpdateConfig(c => c.WithProperty("delay", "30s").WithProperty("parallelism", 2))
                     .WithRestartPolicy(c => c.WithProperty("condition", "on-failure").WithProperty("delay", "5s"))
                     .WithPlacement(c => c.WithProperty("max_replicas_per_node", 3))
@@ -1879,6 +1884,7 @@ public class ComposeBuilderTests
                         .WithMap("limits", l => l.WithProperty("memory", "512M"))
                         .WithMap("reservations", r => r.WithProperty("cpus", "0.25"))
                     )
+#pragma warning restore CS0618 // Type or member is obsolete
                 )
                 .Build()
             )
@@ -1919,12 +1925,15 @@ public class ComposeBuilderTests
         var compose = Builder.MakeCompose()
             .WithServices(Builder.MakeService("app")
                 .WithImage("myapp:latest")
-                .WithSwarm().WithDeploy(deploy => deploy
+                .WithSwarm().WithDeploy(deploy =>
+#pragma warning disable CS0618 // Type or member is obsolete
+                    deploy
                     .WithUpdateConfig(c => c
                         .WithProperty("failure_action", "rollback")
                         .WithProperty("order", "start-first")
                     )
                     .WithRestartPolicy(c => c.WithProperty("condition", "any"))
+#pragma warning restore CS0618 // Type or member is obsolete
                 )
                 .Build()
             )
