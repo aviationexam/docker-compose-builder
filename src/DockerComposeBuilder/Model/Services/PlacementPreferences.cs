@@ -1,10 +1,10 @@
 using DockerComposeBuilder.Model.Base;
 using System;
 
-namespace DockerComposeBuilder.Model;
+namespace DockerComposeBuilder.Model.Services;
 
 [Serializable]
-public class PlacementPreferences : ObjectBase
+public class PlacementPreference : ObjectBase
 {
     public string Spread
     {

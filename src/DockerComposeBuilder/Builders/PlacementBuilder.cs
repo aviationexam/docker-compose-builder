@@ -11,7 +11,7 @@ public class PlacementBuilder : BaseBuilder<PlacementBuilder, Placement>
     {
     }
 
-    public PlacementBuilder WithConstraints(params string[] constraints)
+    public PlacementBuilder WithConstraints(params IReadOnlyCollection<string> constraints)
     {
         if (WorkingObject.Constraints == null)
         {
@@ -27,7 +27,7 @@ public class PlacementBuilder : BaseBuilder<PlacementBuilder, Placement>
 
     public PlacementBuilder WithPreference(string spread)
     {
-        WorkingObject.Preferences ??= new List<PlacementPreference>();
+        WorkingObject.Preferences ??= [];
         WorkingObject.Preferences.Add(new PlacementPreference { Spread = spread });
         return this;
     }
