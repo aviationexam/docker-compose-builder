@@ -11,15 +11,15 @@ public class PlacementBuilder : BaseBuilder<PlacementBuilder, Placement>
     {
     }
 
-    public PlacementBuilder WithConstraints(params IReadOnlyList<string> constraints)
+    public PlacementBuilder WithConstraints(params IReadOnlyCollection<string> constraints)
     {
         if (WorkingObject.Constraints == null)
         {
-            WorkingObject.Constraints = constraints;
+            WorkingObject.Constraints = [.. constraints];
         }
         else
         {
-            WorkingObject.Constraints = WorkingObject.Constraints.Concat(constraints).ToArray();
+            WorkingObject.Constraints = WorkingObject.Constraints.Concat(constraints).ToList();
         }
 
         return this;
