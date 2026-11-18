@@ -117,11 +117,15 @@ public class DeployMapCultureTests
         Assert.Contains("cpus: 0.5\n", compose.Serialize());
     }
 
-    private static Compose Build(Action<DeployBuilder> configure) => Builder.MakeCompose()
+    private static Compose Build(
+        Action<DeployBuilder> configure
+    ) => Builder.MakeCompose()
         .WithServices(Builder.MakeService("app").WithImage("app").WithSwarm().WithDeploy(configure).Build())
         .Build();
 
-    private static Deploy DeployOf(Compose compose) => compose.Services!["app"].Deploy!;
+    private static Deploy DeployOf(
+        Compose compose
+    ) => compose.Services!["app"].Deploy!;
 
     private sealed class CultureScope : IDisposable
     {
