@@ -106,40 +106,35 @@ public class DeployBuilder : BaseBuilder<DeployBuilder, Deploy>
     [Obsolete($"Use {nameof(WithUpdateConfig)} with {nameof(UpdateConfig)} or {nameof(UpdateConfigBuilder)} instead.", error: false)]
     public DeployBuilder WithUpdateConfig(Action<MapBuilder> updateConfig)
     {
-        var mb = new MapBuilder();
-        updateConfig(mb);
-        var map = mb.Build();
-        WorkingObject.UpdateConfig = DeployMappingConverter.FromMap<UpdateConfig>(map);
+        WorkingObject.UpdateConfig = BuildMap<UpdateConfig>(updateConfig);
         return this;
     }
 
     [Obsolete($"Use {nameof(WithRestartPolicy)} with {nameof(RestartPolicy)} or {nameof(RestartPolicyBuilder)} instead.", error: false)]
     public DeployBuilder WithRestartPolicy(Action<MapBuilder> restartPolicy)
     {
-        var mb = new MapBuilder();
-        restartPolicy(mb);
-        var map = mb.Build();
-        WorkingObject.RestartPolicy = DeployMappingConverter.FromMap<RestartPolicy>(map);
+        WorkingObject.RestartPolicy = BuildMap<RestartPolicy>(restartPolicy);
         return this;
     }
 
     [Obsolete($"Use {nameof(WithPlacement)} with {nameof(Placement)} or {nameof(PlacementBuilder)} instead.", error: false)]
     public DeployBuilder WithPlacement(Action<MapBuilder> placement)
     {
-        var mb = new MapBuilder();
-        placement(mb);
-        var map = mb.Build();
-        WorkingObject.Placement = DeployMappingConverter.FromMap<Placement>(map);
+        WorkingObject.Placement = BuildMap<Placement>(placement);
         return this;
     }
 
     [Obsolete($"Use {nameof(WithResources)} with {nameof(Resources)} or {nameof(ResourcesBuilder)} instead.", error: false)]
     public DeployBuilder WithResources(Action<MapBuilder> resources)
     {
-        var mb = new MapBuilder();
-        resources(mb);
-        var map = mb.Build();
-        WorkingObject.Resources = DeployMappingConverter.FromMap<Resources>(map);
+        WorkingObject.Resources = BuildMap<Resources>(resources);
         return this;
+    }
+
+    private static T BuildMap<T>(Action<MapBuilder> configure) where T : DeployMapping, new()
+    {
+        var builder = new MapBuilder();
+        configure(builder);
+        return DeployMappingConverter.FromMap<T>(builder.Build());
     }
 }

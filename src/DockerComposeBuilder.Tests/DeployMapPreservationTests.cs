@@ -106,7 +106,10 @@ public class DeployMapPreservationTests
             .WithServices(Builder.MakeService("s").WithSwarm().WithDeploy(deploy => deploy
                 .WithUpdateConfig(c => c.WithProperty("parallelism", "${WORKERS}")
                     .WithProperty("max_failure_ratio", "0.25")
-                    .WithProperty("x-empty", new object[0]))).Build())
+                    .WithProperty("order", "StartFirst")
+                    .WithProperty("failure_action", "Vendor-Action")
+                    .WithProperty("x-empty", new object[0]))
+                .WithRestartPolicy(c => c.WithProperty("condition", "ON-FAILURE"))).Build())
             .Build();
 #pragma warning restore CS0618
 
@@ -114,7 +117,11 @@ public class DeployMapPreservationTests
             update_config:
               parallelism: "${WORKERS}"
               max_failure_ratio: "0.25"
+              order: start-first
+              failure_action: Vendor-Action
               x-empty: []
+            restart_policy:
+              condition: on-failure
             """, compose.Serialize());
     }
 
