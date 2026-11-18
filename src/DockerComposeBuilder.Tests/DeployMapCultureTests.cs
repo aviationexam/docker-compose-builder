@@ -1,5 +1,7 @@
 using DockerComposeBuilder.Builders;
 using DockerComposeBuilder.Extensions;
+using DockerComposeBuilder.Model;
+using DockerComposeBuilder.Model.Services;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,109 +13,115 @@ namespace DockerComposeBuilder.Tests;
 #pragma warning disable CS0618
 public class DeployMapCultureTests
 {
+    public static TheoryData<string> Cultures => ["", "cs-CZ", "de-DE"];
+
     [Theory]
-    [InlineData("")]
-    [InlineData("cs-CZ")]
-    [InlineData("de-DE")]
-    public void DeployMapEmitsInvariantScalars(string culture)
+    [MemberData(nameof(Cultures))]
+    public void NumericCpusStaysAnUnquotedNumber(string culture)
     {
         using var scope = new CultureScope(culture);
-        var yaml = Serialize(deploy => deploy
-            .WithUpdateConfig(c => c.WithProperty("parallelism", 2L)
-                .WithProperty("delay", 1.25m).WithProperty("monitor", 2.75)
-                .WithProperty("max_failure_ratio", "0.3"))
-            .WithRestartPolicy(c => c.WithProperty("delay", 3.25)
-                .WithProperty("max_attempts", "4").WithProperty("window", 5.75m))
-            .WithPlacement(c => c.WithProperty("max_replicas_per_node", 3)
-                .WithProperty("constraints", new object[] { 6.25m })
-                .WithProperty("preferences", new[] { new Dictionary<string, object> { ["spread"] = 7.75 } }))
-            .WithResources(c => c.WithProperty("limits", new Dictionary<string, object>
-            {
-                ["cpus"] = 0.5,
-                ["memory"] = 8.25m,
-                ["pids"] = 9m,
-            })
-                .WithProperty("reservations", new Dictionary<string, string>
-                {
-                    ["cpus"] = "0.50",
-                    ["memory"] = "512M",
-                    ["pids"] = "10",
-                })));
+        var compose = Build(d => d.WithResources(c => c.WithProperty("limits",
+            new Dictionary<string, object> { ["cpus"] = 0.5 })));
 
-        Assert.Contains(
-            """
-                  update_config:
-                    parallelism: 2
-                    delay: "1.25"
-                    monitor: "2.75"
-                    max_failure_ratio: 0.3
-                  restart_policy:
-                    delay: "3.25"
-                    max_attempts: 4
-                    window: "5.75"
-                  placement:
-                    constraints:
-                    - "6.25"
-                    preferences:
-                    - spread: "7.75"
-                    max_replicas_per_node: 3
-                  resources:
-                    limits:
-                      cpus: 0.5
-                      memory: "8.25"
-                      pids: 9
-                    reservations:
-                      cpus: "0.50"
-                      memory: "512M"
-                      pids: 10
-            """, yaml);
+        Assert.Contains("cpus: 0.5\n", compose.Serialize());
+        Assert.Equal("0.5", DeployOf(compose).Resources!.Limits!.Cpus);
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("cs-CZ")]
-    [InlineData("de-DE")]
-    public void NumericMapCpuCanBeReadReassignedAndCleared(string culture)
+    [MemberData(nameof(Cultures))]
+    public void QuotedRatioStaysAQuotedString(string culture)
     {
         using var scope = new CultureScope(culture);
-        var service = Builder.MakeService("app").WithImage("app").WithSwarm()
-            .WithDeploy(d => d.WithResources(c => c.WithProperty("limits",
-                new Dictionary<string, object> { ["cpus"] = 0.5 }))).Build();
-        var compose = Builder.MakeCompose().WithServices(service).Build();
-        var limits = compose.Services["app"].Deploy!.Resources!.Limits!;
+        var compose = Build(d => d.WithUpdateConfig(c => c.WithProperty("max_failure_ratio", "0.3")));
 
-        Assert.Equal("0.5", limits.Cpus);
+        Assert.Contains("max_failure_ratio: \"0.3\"\n", compose.Serialize());
+        Assert.Equal(0.3, DeployOf(compose).UpdateConfig!.MaxFailureRatio);
+    }
+
+    [Theory]
+    [MemberData(nameof(Cultures))]
+    public void EveryNumericTypeKeepsItsYamlForm(string culture)
+    {
+        using var scope = new CultureScope(culture);
+        var compose = Build(d => d
+            .WithUpdateConfig(c => c.WithProperty("parallelism", 2L).WithProperty("max_failure_ratio", 0.3m))
+            .WithRestartPolicy(c => c.WithProperty("max_attempts", "4"))
+            .WithPlacement(c => c.WithProperty("max_replicas_per_node", 3))
+            .WithResources(c => c
+                .WithProperty("limits", new Dictionary<string, object> { ["cpus"] = 1.5m, ["pids"] = 9L })
+                .WithProperty("reservations", new Dictionary<string, string> { ["cpus"] = "0.50", ["pids"] = "10" })));
+
+        var yaml = compose.Serialize();
+        Assert.Contains("parallelism: 2\n", yaml);
+        Assert.Contains("max_failure_ratio: 0.3\n", yaml);
+        Assert.Contains("max_attempts: \"4\"\n", yaml);
+        Assert.Contains("max_replicas_per_node: 3\n", yaml);
+        Assert.Contains("cpus: 1.5\n", yaml);
+        Assert.Contains("pids: 9\n", yaml);
+        Assert.Contains("cpus: \"0.50\"\n", yaml);
+        Assert.Contains("pids: \"10\"\n", yaml);
+
+        var deploy = DeployOf(compose);
+        Assert.Equal(2, deploy.UpdateConfig!.Parallelism);
+        Assert.Equal(0.3, deploy.UpdateConfig.MaxFailureRatio);
+        Assert.Equal(4, deploy.RestartPolicy!.MaxAttempts);
+        Assert.Equal(3, deploy.Placement!.MaxReplicasPerNode);
+        Assert.Equal("1.5", deploy.Resources!.Limits!.Cpus);
+        Assert.Equal(9, deploy.Resources.Limits.Pids);
+        Assert.Equal("0.50", deploy.Resources.Reservations!.Cpus);
+        Assert.Equal(10, deploy.Resources.Reservations.Pids);
+    }
+
+    [Theory]
+    [MemberData(nameof(Cultures))]
+    public void StringsThatAreNotInvariantNumbersPassThrough(string culture)
+    {
+        using var scope = new CultureScope(culture);
+        var compose = Build(d => d.WithUpdateConfig(c => c
+            .WithProperty("parallelism", "${PARALLELISM}")
+            .WithProperty("max_failure_ratio", "0,3")));
+
+        var yaml = compose.Serialize();
+        Assert.Contains("parallelism: \"${PARALLELISM}\"\n", yaml);
+        Assert.Contains("max_failure_ratio: \"0,3\"\n", yaml);
+        Assert.Null(DeployOf(compose).UpdateConfig!.Parallelism);
+        Assert.Null(DeployOf(compose).UpdateConfig!.MaxFailureRatio);
+    }
+
+    [Theory]
+    [MemberData(nameof(Cultures))]
+    public void TypedEditReplacesTheNumericMapValue(string culture)
+    {
+        using var scope = new CultureScope(culture);
+        var compose = Build(d => d.WithResources(c => c.WithProperty("limits",
+            new Dictionary<string, object> { ["cpus"] = 0.5 })));
+        var limits = DeployOf(compose).Resources!.Limits!;
+
         limits.Cpus = "1.50";
         Assert.Equal("1.50", limits.Cpus);
-        Assert.Contains("cpus: \"1.50\"", compose.Serialize());
+        Assert.Contains("cpus: \"1.50\"\n", compose.Serialize());
+
         limits.Cpus = null;
-        Assert.Null(limits.Cpus);
         Assert.DoesNotContain("cpus:", compose.Serialize());
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("cs-CZ")]
-    [InlineData("de-DE")]
-    public void InvalidNumbersIdentifyTheMapKey(string culture)
+    [MemberData(nameof(Cultures))]
+    public void DeserializedNumbersReadTheSameInEveryCulture(string culture)
     {
         using var scope = new CultureScope(culture);
-        var ratio = Assert.Throws<ArgumentException>(() => Serialize(d =>
-            d.WithUpdateConfig(c => c.WithProperty("max_failure_ratio", "0,3"))));
-        Assert.Contains("max_failure_ratio", ratio.Message);
+        var compose = ComposeExtensions.Deserialize(
+            "services:\n  app:\n    deploy:\n      resources:\n        limits:\n          cpus: 0.5\n");
 
-        var pids = Assert.Throws<ArgumentException>(() => Serialize(d =>
-            d.WithResources(c => c.WithProperty("limits", new Dictionary<string, string> { ["pids"] = "many" }))));
-        Assert.Contains("pids", pids.Message);
-
-        var attempts = Assert.Throws<ArgumentException>(() => Serialize(d =>
-            d.WithRestartPolicy(c => c.WithProperty("max_attempts", 2.5m))));
-        Assert.Contains("max_attempts", attempts.Message);
+        Assert.Equal("0.5", DeployOf(compose).Resources!.Limits!.Cpus);
+        Assert.Contains("cpus: 0.5\n", compose.Serialize());
     }
 
-    private static string Serialize(Action<DeployBuilder> configure) => Builder.MakeCompose()
+    private static Compose Build(Action<DeployBuilder> configure) => Builder.MakeCompose()
         .WithServices(Builder.MakeService("app").WithImage("app").WithSwarm().WithDeploy(configure).Build())
-        .Build().Serialize();
+        .Build();
+
+    private static Deploy DeployOf(Compose compose) => compose.Services!["app"].Deploy!;
 
     private sealed class CultureScope : IDisposable
     {
