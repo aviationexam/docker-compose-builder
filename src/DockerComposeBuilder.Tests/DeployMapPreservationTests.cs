@@ -70,6 +70,13 @@ public class DeployMapPreservationTests
     [InlineData(DeploySections)]
     [InlineData("""
         resources:
+          limits:
+            x-empty-list: []
+            x-empty-map: {}
+            x-null: null
+        """)]
+    [InlineData("""
+        resources:
           reservations:
             devices:
               - driver: nvidia
@@ -81,6 +88,26 @@ public class DeployMapPreservationTests
         var yaml = "services:\n  s:\n    image: x\n    deploy:\n      " + deployYaml.Replace("\n", "\n      ");
 
         AssertDeploySections(deployYaml, ComposeExtensions.Deserialize(yaml).Serialize());
+    }
+
+    [Fact]
+    public void MapBuilderPreservesValuesOutsideTheTypedSchema()
+    {
+#pragma warning disable CS0618
+        var compose = Builder.MakeCompose()
+            .WithServices(Builder.MakeService("s").WithSwarm().WithDeploy(deploy => deploy
+                .WithUpdateConfig(c => c.WithProperty("parallelism", "${WORKERS}")
+                    .WithProperty("max_failure_ratio", "0.25")
+                    .WithProperty("x-empty", new object[0]))).Build())
+            .Build();
+#pragma warning restore CS0618
+
+        AssertDeploySections("""
+            update_config:
+              parallelism: "${WORKERS}"
+              max_failure_ratio: "0.25"
+              x-empty: []
+            """, compose.Serialize());
     }
 
     private static void AssertDeploySections(string expectedDeploy, string actualCompose)
