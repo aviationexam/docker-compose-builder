@@ -20,7 +20,7 @@
 
   <!-- Framework-independent libraries -->
   <ItemGroup>
-    <PackageVersion Include="YamlDotNet" Version="16.3.0" />
+    <PackageVersion Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
 
   <!-- Transitive dependencies - Framework-independent -->
