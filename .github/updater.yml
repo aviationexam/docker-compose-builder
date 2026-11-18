@@ -18,6 +18,13 @@ updates:
     execute-restore: true
     registries:
       - nuget
+    ignore:
+      - dependency-name: "Microsoft.Bcl.AsyncInterfaces"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "Microsoft.Extensions.DependencyModel"
+        update-types:
+          - "version-update:semver-major"
     groups:
       microsoft:
         patterns:

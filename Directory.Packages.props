@@ -26,9 +26,7 @@
   <!-- Transitive dependencies - Framework-independent -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="3.2.0" />
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="11.0.0" />
     <PackageVersion Include="Microsoft.DiaSymReader" Version="3.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.Telemetry" Version="2.5.3" />
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="2.5.3" />
     <PackageVersion Include="Microsoft.Testing.Platform" Version="2.5.3" />
@@ -41,6 +39,18 @@
     <PackageVersion Include="xunit.v3.extensibility.core" Version="4.0.3" />
     <PackageVersion Include="xunit.v3.runner.common" Version="4.0.3" />
     <PackageVersion Include="xunit.v3.runner.inproc.console" Version="4.0.3" />
+  </ItemGroup>
+
+  <!-- Transitive dependencies - .NET 10 only -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="10.0.15" />
+  </ItemGroup>
+
+  <!-- Transitive dependencies - .NET 11 only -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net11.0'">
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="11.0.0" />
   </ItemGroup>
 
   <!-- Transitive dependencies - .NETStandard 2.0 only -->
