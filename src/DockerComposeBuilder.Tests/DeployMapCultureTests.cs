@@ -28,12 +28,16 @@ public class DeployMapCultureTests
                 .WithProperty("constraints", new object[] { 6.25m })
                 .WithProperty("preferences", new[] { new Dictionary<string, object> { ["spread"] = 7.75 } }))
             .WithResources(c => c.WithProperty("limits", new Dictionary<string, object>
-                {
-                    ["cpus"] = 0.5, ["memory"] = 8.25m, ["pids"] = 9m,
-                })
+            {
+                ["cpus"] = 0.5,
+                ["memory"] = 8.25m,
+                ["pids"] = 9m,
+            })
                 .WithProperty("reservations", new Dictionary<string, string>
                 {
-                    ["cpus"] = "0.50", ["memory"] = "512M", ["pids"] = "10",
+                    ["cpus"] = "0.50",
+                    ["memory"] = "512M",
+                    ["pids"] = "10",
                 })));
 
         Assert.Contains(
@@ -79,6 +83,10 @@ public class DeployMapCultureTests
         var pids = Assert.Throws<ArgumentException>(() => Serialize(d =>
             d.WithResources(c => c.WithProperty("limits", new Dictionary<string, string> { ["pids"] = "many" }))));
         Assert.Contains("pids", pids.Message);
+
+        var attempts = Assert.Throws<ArgumentException>(() => Serialize(d =>
+            d.WithRestartPolicy(c => c.WithProperty("max_attempts", 2.5m))));
+        Assert.Contains("max_attempts", attempts.Message);
     }
 
     private static string Serialize(Action<DeployBuilder> configure) => Builder.MakeCompose()
