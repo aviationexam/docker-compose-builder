@@ -8,7 +8,7 @@
 
   <!-- Build-time tools -->
   <ItemGroup>
-    <PackageVersion Include="PolySharp" Version="1.15.0" />
+    <PackageVersion Include="PolySharp" Version="1.17.1" />
   </ItemGroup>
 
   <!-- Test infrastructure -->
