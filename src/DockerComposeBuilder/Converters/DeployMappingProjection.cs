@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -160,9 +161,16 @@ internal static class DeployMappingProjection
         lossless = false;
         try
         {
-            if (target == typeof(int)) return Convert.ToInt32(value);
-            if (target == typeof(double)) return Convert.ToDouble(value);
-            if (target == typeof(string)) return value.ToString();
+            var invariant = CultureInfo.InvariantCulture;
+            if (target == typeof(int)) return Convert.ToInt32(value, invariant);
+            if (target == typeof(double))
+            {
+                // Convert.ToDouble accepts thousands separators and would read "0,3" as 3.
+                return value is string number
+                    ? double.Parse(number, NumberStyles.Float, invariant)
+                    : Convert.ToDouble(value, invariant);
+            }
+            if (target == typeof(string)) return Convert.ToString(value, invariant);
         }
         catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
         {
