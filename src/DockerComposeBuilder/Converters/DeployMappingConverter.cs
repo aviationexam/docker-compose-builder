@@ -17,11 +17,15 @@ namespace DockerComposeBuilder.Converters;
 internal sealed class DeployMappingConverter : IYamlTypeConverter
 {
     private static readonly ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>> Members = new();
-    private static Dictionary<string, PropertyInfo> Properties(Type type) => Members.GetOrAdd(type,
+    private static Dictionary<string, PropertyInfo> Properties(
+        Type type
+    ) => Members.GetOrAdd(type,
         t => t.GetProperties().Where(p => p.IsDefined(typeof(YamlMemberAttribute)))
             .ToDictionary(p => p.GetCustomAttribute<YamlMemberAttribute>()!.Alias!, p => p));
 
-    public bool Accepts(Type type) => typeof(DeployMapping).IsAssignableFrom(type);
+    public bool Accepts(
+        Type type
+    ) => typeof(DeployMapping).IsAssignableFrom(type);
 
     public object? ReadYaml(IParser parser, Type type, ObjectDeserializer rootDeserializer)
     {
@@ -89,7 +93,9 @@ internal sealed class DeployMappingConverter : IYamlTypeConverter
         serializer(entries);
     }
 
-    internal static T FromMap<T>(Map map) where T : DeployMapping, new() => (T) FromDictionary(typeof(T), map);
+    internal static T FromMap<T>(
+        Map map
+    ) where T : DeployMapping, new() => (T) FromDictionary(typeof(T), map);
 
     private static DeployMapping FromDictionary(Type type, IDictionary source)
     {

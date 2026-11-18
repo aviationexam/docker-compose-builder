@@ -47,9 +47,13 @@ public class ResourceSpecBuilder : BaseBuilder<ResourceSpecBuilder, ResourceSpec
         return this;
     }
 
-    public ResourceSpecBuilder WithDiscreteResource(string kind, decimal value)
-        => WithGenericResource(new GenericResource { DiscreteResourceSpec = new DiscreteResourceSpec { Kind = kind, Value = value } });
+    public ResourceSpecBuilder WithDiscreteResource(
+        string kind,
+        decimal value
+    ) => WithGenericResource(new GenericResource { DiscreteResourceSpec = new DiscreteResourceSpec { Kind = kind, Value = value } });
 
-    public ResourceSpecBuilder WithDiscreteResource(string kind, string value)
-        => WithGenericResource(new GenericResource { DiscreteResourceSpec = new DiscreteResourceSpec { Kind = kind, Value = value } });
+    public ResourceSpecBuilder WithDiscreteResource(
+        string kind,
+        string value
+    ) => WithGenericResource(new GenericResource { DiscreteResourceSpec = new DiscreteResourceSpec { Kind = kind, Value = value } });
 }
