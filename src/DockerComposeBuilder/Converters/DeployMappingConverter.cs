@@ -70,7 +70,7 @@ internal sealed class DeployMappingConverter : IYamlTypeConverter
             var current = property.Value.GetValue(model);
             if (model.Extra.TryGetValue(property.Key, out var preserved) && Equals(current, preserved.Projection))
             {
-                entries.Add(property.Key, preserved.Original);
+                entries.Add(property.Key, Restored(current, preserved.Original));
             }
             else if (current != null)
             {
@@ -104,19 +104,32 @@ internal sealed class DeployMappingConverter : IYamlTypeConverter
                 continue;
             }
 
-            var projected = Project(entry.Value, property.PropertyType, out var lossless);
+            var projected = Project(entry.Value, property.PropertyType, out var lossless, out var original);
             property.SetValue(model, projected);
             if (!lossless)
             {
-                model.Extra[key] = (entry.Value, projected);
+                model.Extra[key] = (original, projected);
             }
         }
 
         return model;
     }
 
-    private static object? Project(object? value, Type target, out bool lossless)
+    // Keep fallbacks only for lossy slots, never for the whole mutable list.
+    [Serializable]
+    private sealed class ListFallbacks : Dictionary<int, (object? Original, object? Projection)> { }
+
+    private static object? Restored(object? current, object? original)
     {
+        if (original is not ListFallbacks slots || current is not IList list) return original;
+        return list.Cast<object?>().Select((item, index) =>
+            slots.TryGetValue(index, out var slot) && Equals(item, slot.Projection)
+                ? Restored(item, slot.Original) : item).ToList();
+    }
+
+    private static object? Project(object? value, Type target, out bool lossless, out object? original)
+    {
+        original = value;
         target = Nullable.GetUnderlyingType(target) ?? target;
         lossless = value != null;
         if (value == null || target.IsInstanceOfType(value))
@@ -145,11 +158,15 @@ internal sealed class DeployMappingConverter : IYamlTypeConverter
             && value is IEnumerable sequence and not string and not IDictionary)
         {
             var list = (IList) Activator.CreateInstance(target)!;
+            var slots = new ListFallbacks();
             foreach (var item in sequence)
             {
-                list.Add(Project(item, target.GetGenericArguments()[0], out var represented));
-                lossless &= represented;
+                var projected = Project(item, target.GetGenericArguments()[0], out var represented, out var raw);
+                if (!represented) slots[list.Count] = (raw, projected);
+                list.Add(projected);
             }
+            lossless = slots.Count == 0;
+            original = slots;
             return list;
         }
 
@@ -158,9 +175,9 @@ internal sealed class DeployMappingConverter : IYamlTypeConverter
             foreach (var field in target.GetFields(BindingFlags.Static | BindingFlags.Public))
             {
                 var spelling = field.GetCustomAttribute<EnumMemberAttribute>()?.Value;
-                if (spelling == text || string.Equals(field.Name, text, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(spelling, text, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(field.Name, text, StringComparison.OrdinalIgnoreCase))
                 {
-                    lossless = spelling == text;
                     return field.GetValue(null);
                 }
             }
