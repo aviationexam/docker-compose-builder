@@ -5,7 +5,7 @@ using YamlDotNet.Serialization;
 namespace DockerComposeBuilder.Model.Services;
 
 [Serializable]
-public class UpdateConfig
+public class UpdateConfig : DeployMapping
 {
     [YamlMember(Alias = "parallelism")]
     public int? Parallelism { get; set; }

@@ -5,7 +5,7 @@ using YamlDotNet.Serialization;
 namespace DockerComposeBuilder.Model.Services;
 
 [Serializable]
-public class Placement
+public class Placement : DeployMapping
 {
     [YamlMember(Alias = "constraints")]
     public List<string>? Constraints { get; set; }
