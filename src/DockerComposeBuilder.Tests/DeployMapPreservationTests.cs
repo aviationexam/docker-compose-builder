@@ -32,10 +32,10 @@ public class DeployMapPreservationTests
     [Fact]
     public void MapBuilderPreservesDevicesAndUnknownKeysInEverySection()
     {
+#pragma warning disable CS0618 // Exercise the legacy map overloads.
         var compose = Builder.MakeCompose()
             .WithServices(Builder.MakeService("s").WithImage("x")
                 .WithSwarm().WithDeploy(deploy => deploy
-#pragma warning disable CS0618 // Exercise the legacy map overloads.
                     .WithUpdateConfig(c => c.WithProperty("parallelism", 2).WithProperty("x-custom", "y"))
                     .WithRestartPolicy(c => c.WithProperty("x-enabled", false))
                     .WithPlacement(c => c.WithProperty("x-weights", new object[] { 2, 1.5, "2" }))
@@ -59,9 +59,9 @@ public class DeployMapPreservationTests
                                 ["labels"] = new[] { "fast", "false" },
                             },
                         })))
-#pragma warning restore CS0618
                 .Build())
             .Build();
+#pragma warning restore CS0618
 
         AssertDeploySections(DeploySections, compose.Serialize());
     }
