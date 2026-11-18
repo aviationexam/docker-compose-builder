@@ -135,6 +135,6 @@ public class DeployBuilder : BaseBuilder<DeployBuilder, Deploy>
     {
         var builder = new MapBuilder();
         configure(builder);
-        return DeployMappingConverter.FromMap<T>(builder.Build());
+        return DeployMappingProjection.FromMap<T>(builder.Build());
     }
 }

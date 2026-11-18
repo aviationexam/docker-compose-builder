@@ -40,7 +40,7 @@ public static class ComposeExtensions
     )
     {
         var builder = new DeserializerBuilder()
-            .WithNodeDeserializer(new DeployMappingConverter.DeployScalarDeserializer())
+            .WithNodeDeserializer(new DeployScalarDeserializer())
             .WithTypeConverter(new DeployMappingConverter())
             .WithTypeConverter(new PublishedPortConverter())
             .WithTypeConverter(new UnixFileModeConverter())
