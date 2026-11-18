@@ -4,7 +4,7 @@ using YamlDotNet.Serialization;
 namespace DockerComposeBuilder.Model.Services;
 
 [Serializable]
-public class DiscreteResourceSpec
+public class DiscreteResourceSpec : DeployMapping
 {
     [YamlMember(Alias = "kind")]
     public string? Kind { get; set; }

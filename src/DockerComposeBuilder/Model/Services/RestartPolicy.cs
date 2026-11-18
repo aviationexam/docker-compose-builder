@@ -5,7 +5,7 @@ using YamlDotNet.Serialization;
 namespace DockerComposeBuilder.Model.Services;
 
 [Serializable]
-public class RestartPolicy
+public class RestartPolicy : DeployMapping
 {
     [YamlMember(Alias = "condition")]
     public ERestartCondition? Condition { get; set; }

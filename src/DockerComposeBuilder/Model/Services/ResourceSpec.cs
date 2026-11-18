@@ -5,7 +5,7 @@ using YamlDotNet.Serialization;
 namespace DockerComposeBuilder.Model.Services;
 
 [Serializable]
-public class ResourceSpec
+public class ResourceSpec : DeployMapping
 {
     [YamlMember(Alias = "cpus")]
     public string? Cpus { get; set; }

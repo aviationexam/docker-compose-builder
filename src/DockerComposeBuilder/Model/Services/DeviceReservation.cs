@@ -5,7 +5,7 @@ using YamlDotNet.Serialization;
 namespace DockerComposeBuilder.Model.Services;
 
 [Serializable]
-public class DeviceReservation
+public class DeviceReservation : DeployMapping
 {
     [YamlMember(Alias = "capabilities")]
     public List<string>? Capabilities { get; set; }

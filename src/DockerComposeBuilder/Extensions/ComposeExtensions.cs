@@ -14,6 +14,7 @@ public static class ComposeExtensions
     ) => new SerializerBuilder()
         .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
         .WithTypeConverter(new YamlValueCollectionConverter())
+        .WithTypeConverter(new DeployMappingConverter())
         .WithTypeConverter(new PublishedPortConverter())
         .WithTypeConverter(new UnixFileModeConverter())
         .WithTypeConverter(new ServiceVolumeCollectionConverter())
@@ -39,6 +40,8 @@ public static class ComposeExtensions
     )
     {
         var builder = new DeserializerBuilder()
+            .WithNodeDeserializer(new DeployMappingConverter.DeployScalarDeserializer())
+            .WithTypeConverter(new DeployMappingConverter())
             .WithTypeConverter(new PublishedPortConverter())
             .WithTypeConverter(new UnixFileModeConverter())
             .WithTypeConverter(new ServiceVolumeCollectionConverter())

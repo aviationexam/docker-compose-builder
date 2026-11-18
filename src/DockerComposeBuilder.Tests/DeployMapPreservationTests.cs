@@ -69,6 +69,14 @@ public class DeployMapPreservationTests
     [Theory]
     [InlineData(DeploySections)]
     [InlineData("""
+        update_config:
+          delay: &typed "10s"
+          x-delay: *typed
+        restart_policy:
+          x-window: &extension "20s"
+          window: *extension
+        """)]
+    [InlineData("""
         resources:
           limits:
             x-empty-list: []
