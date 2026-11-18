@@ -73,6 +73,28 @@ public class DeployMapCultureTests
     [InlineData("")]
     [InlineData("cs-CZ")]
     [InlineData("de-DE")]
+    public void NumericMapCpuCanBeReadReassignedAndCleared(string culture)
+    {
+        using var scope = new CultureScope(culture);
+        var service = Builder.MakeService("app").WithImage("app").WithSwarm()
+            .WithDeploy(d => d.WithResources(c => c.WithProperty("limits",
+                new Dictionary<string, object> { ["cpus"] = 0.5 }))).Build();
+        var compose = Builder.MakeCompose().WithServices(service).Build();
+        var limits = compose.Services["app"].Deploy!.Resources!.Limits!;
+
+        Assert.Equal("0.5", limits.Cpus);
+        limits.Cpus = "1.50";
+        Assert.Equal("1.50", limits.Cpus);
+        Assert.Contains("cpus: \"1.50\"", compose.Serialize());
+        limits.Cpus = null;
+        Assert.Null(limits.Cpus);
+        Assert.DoesNotContain("cpus:", compose.Serialize());
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("cs-CZ")]
+    [InlineData("de-DE")]
     public void InvalidNumbersIdentifyTheMapKey(string culture)
     {
         using var scope = new CultureScope(culture);
