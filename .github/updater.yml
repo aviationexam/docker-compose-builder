@@ -11,7 +11,8 @@ registries:
 
 updates:
   - package-ecosystem: "nuget"
-    directory: "src"
+    directory: "/"
+    restore-directory: "src"
     targetFramework: net10.0
     target-branch: main
     execute-restore: true
