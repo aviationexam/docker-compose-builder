@@ -43,6 +43,12 @@
 
   <!-- Transitive dependencies - .NET 10 only -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="10.0.15" />
+  </ItemGroup>
+
+  <!-- Transitive dependencies - .NET 11 only -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net11.0'">
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="11.0.0" />
   </ItemGroup>
